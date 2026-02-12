@@ -1,35 +1,48 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-
-func totalCost(prices: [Double]) -> Double {
-    var totalCost: Double = 0.0
-    for price in prices {
-        totalCost += price
-        }
-    return totalCost
-}
-
-func isOverBudget(total: Double, budget: Double) -> Bool{
-    return total > budget
-}  
-
-func averageCost(prices: [Double]) -> Double {
-    return totalCost(prices: prices) / Double(prices.count)
-}
-
 @main
 struct SwiftPlayground {
     static func main() {
-        let lunches = [6.50, 8.00, 5.75, 9.20, 7.10]
-        var day:Int = 1
-        for price in lunches {
-            print("Day \(day): $\(price)")
-            day += 1
-        }
-        print(totalCost(prices: lunches))
-        print(averageCost(prices: lunches))
+        let numbers = [1, 2, 3, 4, 5]
 
-        let budget: Double = 35.00
+        // map
+        // find the cube of each number.
+        let cubedNumbers = numbers.map { number in
+            return number * number * number
+        }
+        print(cubedNumbers)  // Output: [1, 8, 27, 64, 125]
+
+        // filter
+        // filter out the even numbers from the cubed numbers.
+        let evenNumbers = cubedNumbers.filter { number in
+            return number % 2 == 0
+        }
+        print(evenNumbers)  // Output: [8, 64]
+
+        // reduce
+        // sum up the even numbers.
+        let result = evenNumbers.reduce(0) { result, item in
+            return result + item
+        }
+        print(result)  // Output: 72
+
+        // combined
+        let total = numbers.map { number in
+            return number * number * number
+        }.filter { number in
+            return number % 2 == 0
+        }.reduce(0) { result, item in
+            return result + item
+        }
+        print(total)  // Output: 72
+
+        // combined better
+        let totalBetter = numbers
+        .map { $0 * $0 * $0 }
+        .filter { $0 % 2 == 0 }
+        .reduce(0, +)
+
+        print(totalBetter)  // Output: 72
     }
 }
