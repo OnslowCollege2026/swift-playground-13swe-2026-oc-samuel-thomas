@@ -29,7 +29,10 @@ struct SwiftPlayground {
         }
         print(totalCost(prices: lunches))
         print(averageCost(prices: lunches))
-
-        let budget: Double = 35.00
+        if isOverBudget(total: totalCost(prices: lunches), budget: 35.00) {
+            print("You are over budget!")
+        } else {
+            print("You are within budget.")
+        }
     }
 }
