@@ -77,18 +77,28 @@ struct SwiftPlayground {
             let dbQueue = try DatabaseQueue(path: dbpath)
             print("database connection succesful")
 
-            try dbQueue.read { database in
-                try database.dumpSchema()
+            try dbQueue.read { db in
+                // try db.dumpSchema()
             }
             let purchaserID = 1
 
             try dbQueue.read { db in
-                let purchaser = try Purchaser.fetchOne(db, key: purchaserID)
-                if let purchaser {
+                if let purchaser = try Purchaser.fetchOne(db, key: purchaserID) {
                     print("Found purchaser with ID \(purchaser.id): \(purchaser.name)")
                 } else {
                     print("No purchaser with id \(purchaserID)")
                 }
+                if let someOtherPerson = try Purchaser.fetchOne(db, key: 2) {
+                    print("Found purchaser with ID \(someOtherPerson.id): \(someOtherPerson.name)")
+                } else {
+                    print("No purchaser with id 2")
+                }
+                if let item = try Item.fetchOne(db, key: 1) {
+                    print("Found item with ID \(item.id): \(item.name)")
+                } else {
+                    print("No item with id 1")
+                }
+
             }
             
         } catch {
