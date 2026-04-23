@@ -4,6 +4,23 @@
 import Foundation
 import GRDB
 
+struct borrower: Identifiable, Codable, FetchableRecord, PersistableRecord {
+    /// the borrower ID
+    let id: Int
+    /// borrowers name
+    var name: String
+    /// borrowers email
+    var email: String
+    /// borrowers phone number
+    var phone: String
+
+    enum CodingKeys: String, CodingKey {
+        case id = "borrowerID"
+        case name = "name"
+        case email = "email"
+        case phone = "phone"
+    }
+}
 
 @main
 struct SwiftPlayground {
@@ -19,22 +36,11 @@ struct SwiftPlayground {
             let borrowerID = 0
 
             try dbQueue.read { db in
-                if let borrowerID = try Purchaser.fetchOne(db, key: purchaserID) {
-                    print("Found purchaser with ID \(purchaser.id): \(purchaser.name)")
+                if let borrowerID = try borrower.fetchOne(db, key: borrowerID) {
+                    print("Found borrower with ID \(borrower.id): \(borrower.name)")
                 } else {
-                    print("No purchaser with id \(purchaserID)")
+                    print("No purchaser with id \(borrowerID)")
                 }
-                if let someOtherPerson = try Purchaser.fetchOne(db, key: 2) {
-                    print("Found purchaser with ID \(someOtherPerson.id): \(someOtherPerson.name)")
-                } else {
-                    print("No purchaser with id 2")
-                }
-                if let item = try Item.fetchOne(db, key: 1) {
-                    print("Found item with ID \(item.id): \(item.name)")
-                } else {
-                    print("No item with id 1")
-                }
-
             }
             
         } catch {
