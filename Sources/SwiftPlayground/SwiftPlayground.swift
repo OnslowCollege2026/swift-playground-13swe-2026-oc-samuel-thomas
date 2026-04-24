@@ -20,13 +20,12 @@ struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
         case name
         case email
         case phone
-
+    }
     enum Columns {
         static let id = Column("borrowersID")
         static let name = Column("name")
         static let email = Column("email")
         static let phone = Column("phone")
-    }
     }
 }
 struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
