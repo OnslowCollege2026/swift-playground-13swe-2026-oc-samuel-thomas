@@ -4,7 +4,8 @@
 import Foundation
 import GRDB
 
-struct borrower: Identifiable, Codable, FetchableRecord, PersistableRecord {
+struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
+    static let databaseTableName = "borrowers"
     /// the borrower ID
     let id: Int
     /// borrowers name
@@ -16,9 +17,9 @@ struct borrower: Identifiable, Codable, FetchableRecord, PersistableRecord {
 
     enum CodingKeys: String, CodingKey {
         case id = "borrowerID"
-        case name = "name"
-        case email = "email"
-        case phone = "phone"
+        case name
+        case email
+        case phone
     }
 }
 
@@ -36,10 +37,10 @@ struct SwiftPlayground {
             let borrowerID = 0
 
             try dbQueue.read { db in
-                if let borrowerID = try borrower.fetchOne(db, key: borrowerID) {
+                if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
                     print("Found borrower with ID \(borrower.id): \(borrower.name)")
                 } else {
-                    print("No purchaser with id \(borrowerID)")
+                    print("No borrower with id \(borrowerID)")
                 }
             }
             
