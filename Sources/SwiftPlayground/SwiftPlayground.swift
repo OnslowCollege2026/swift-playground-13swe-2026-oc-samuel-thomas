@@ -79,7 +79,7 @@ struct SwiftPlayground {
             try dbQueue.read { db in
                 let borrowers = try Borrowers
                 .fetchAll(db)
-                for borrower in Borrowers {
+                for borrower in borrowers {
                     print("borrowerID: \(borrower.id), borrowerName: \(borrower.name)")
                 }
             }
