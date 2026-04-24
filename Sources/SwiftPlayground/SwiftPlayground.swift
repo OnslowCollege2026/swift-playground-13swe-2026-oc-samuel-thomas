@@ -76,14 +76,12 @@ struct SwiftPlayground {
                 // try db.dumpSchema()
             }
 
-            let borrowerID = 0
-
             try dbQueue.read { db in
-                let borrower = try Borrowers
-                .order(Borrowers.Column.title)
-                }
+                let Borrowers = try borrower
+
             }
 
+        
             let bookID = 1
 
             try dbQueue.read { db in
