@@ -79,10 +79,8 @@ struct SwiftPlayground {
             let borrowerID = 0
 
             try dbQueue.read { db in
-                if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
-                    print("Found borrower with ID \(borrower.id): \(borrower.name)")
-                } else {
-                    print("No borrower with id \(borrowerID)")
+                let borrower = try Borrowers
+                .order(borro)
                 }
             }
 
