@@ -22,6 +22,47 @@ struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
         case phone
     }
 }
+struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
+    static let databaseTableName = "books"
+    /// the book ID
+    let id: Int
+    /// book title
+    var title: String
+    /// book author
+    var author: String
+    /// year book was published
+    let yearPublished: Int
+
+    enum CodingKeys: String, CodingKey {
+        case id = "bookID"
+        case title
+        case author
+        case yearPublished
+    }
+}
+struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
+    static let databaseTableName = "loans"
+    /// the loan id
+    let id: Int
+    /// the book id
+    var bookID: Int
+    /// the borrower id
+    var borrowerID: Int
+    /// date book was borrowed
+    var dateBorrowed: String
+    /// date book was returned , nullable
+    var dateReturned: String?
+    
+
+    enum CodingKeys: String, CodingKey {
+        case id = "loanID"
+        case bookID
+        case borrowerID
+        case dateBorrowed
+        case dateReturned
+    }
+}
+
 
 @main
 struct SwiftPlayground {
@@ -34,6 +75,7 @@ struct SwiftPlayground {
             try dbQueue.read { db in
                 // try db.dumpSchema()
             }
+
             let borrowerID = 0
 
             try dbQueue.read { db in
@@ -41,6 +83,27 @@ struct SwiftPlayground {
                     print("Found borrower with ID \(borrower.id): \(borrower.name)")
                 } else {
                     print("No borrower with id \(borrowerID)")
+                }
+            }
+
+            let bookID = 1
+
+            try dbQueue.read { db in
+                if let book = try Books.fetchOne(db, key: bookID) {
+                    print("Found book with ID \(book.id): \(book.title)")
+                } else {
+                    print("No book with id \(bookID)")
+                }
+            }
+            
+            let loanID = 0
+
+            try dbQueue.read { db in
+                if let loan = try Loans.fetchOne(db, key: loanID) {
+                    let returned = loan.dateReturned ?? "Not Returned"
+                    print("Found loan with ID \(loan.id): bookID: \(loan.bookID), borrowerID: \(loan.borrowerID), date borrowed:\(loan.dateBorrowed), date returned: \(returned)")
+                } else {
+                    print("No loan with id \(loanID)")
                 }
             }
             
