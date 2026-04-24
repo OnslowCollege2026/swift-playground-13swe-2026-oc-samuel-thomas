@@ -20,6 +20,13 @@ struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
         case name
         case email
         case phone
+
+    enum Columns {
+        static let id = Column("borrowersID")
+        static let name = Column("name")
+        static let email = Column("email")
+        static let phone = Column("phone")
+    }
     }
 }
 struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
@@ -78,6 +85,7 @@ struct SwiftPlayground {
 
             try dbQueue.read { db in
                 let borrowers = try Borrowers
+                .order(Borrowers.Columns.name)
                 .fetchAll(db)
                 for borrower in borrowers {
                     print("borrowerID: \(borrower.id), borrowerName: \(borrower.name)")
