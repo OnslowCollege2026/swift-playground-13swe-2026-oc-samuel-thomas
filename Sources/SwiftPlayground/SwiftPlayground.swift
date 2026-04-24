@@ -80,7 +80,7 @@ struct SwiftPlayground {
 
             try dbQueue.read { db in
                 let borrower = try Borrowers
-                .order(borro)
+                .order(Borrowers.Column.title)
                 }
             }
 
