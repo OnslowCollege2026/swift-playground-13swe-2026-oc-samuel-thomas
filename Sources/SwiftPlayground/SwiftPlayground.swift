@@ -77,8 +77,11 @@ struct SwiftPlayground {
             }
 
             try dbQueue.read { db in
-                let Borrowers = try borrower
-
+                let borrowers = try Borrowers
+                .fetchAll(db)
+                for borrower in Borrowers {
+                    print("borrowerID: \(borrower.id), borrowerName: \(borrower.name)")
+                }
             }
 
         
