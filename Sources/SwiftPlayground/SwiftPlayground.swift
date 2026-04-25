@@ -4,10 +4,11 @@
 import Foundation
 import GRDB
 
+let fallbackValue: Int = -1
 struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
     static let databaseTableName = "borrowers"
     /// the borrower ID
-    let id: Int
+    let id: Int?
     /// borrowers name
     var name: String
     /// borrowers email
@@ -58,7 +59,6 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     var dateBorrowed: String
     /// date book was returned , nullable
     var dateReturned: String?
-    
 
     enum CodingKeys: String, CodingKey {
         case id = "loanID"
@@ -69,7 +69,6 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     }
 }
 
-
 @main
 struct SwiftPlayground {
     static func main() {
@@ -78,41 +77,57 @@ struct SwiftPlayground {
             let dbQueue = try DatabaseQueue(path: dbpath)
             print("database connection succesful")
 
-            try dbQueue.read { db in
-                // try db.dumpSchema()
-            }
+            let borrowerID = 3
 
-            try dbQueue.read { db in
-                let borrowers = try Borrowers
-                .order(Borrowers.Columns.name)
-                .fetchAll(db)
-                for borrower in borrowers {
-                    print("borrowerID: \(borrower.id), borrowerName: \(borrower.name)")
-                }
-            }
-
-        
-            let bookID = 1
-
-            try dbQueue.read { db in
-                if let book = try Books.fetchOne(db, key: bookID) {
-                    print("Found book with ID \(book.id): \(book.title)")
+            try dbQueue.write { db in
+                if var borrower = try Borrowers.fetchOne(db, key: borrowerID) {
+                    print("Found borrower with ID \(borrower.id ?? fallbackValue): \(borrower.name)")
+                    borrower.name = "Bradley Pitt"
+                    try borrower.update(db)
+                    print("New name is \(borrower.name)")
                 } else {
-                    print("No book with id \(bookID)")
+                    print("No borrower with id \(borrowerID)")
                 }
             }
-            
-            let loanID = 0
 
-            try dbQueue.read { db in
-                if let loan = try Loans.fetchOne(db, key: loanID) {
-                    let returned = loan.dateReturned ?? "Not Returned"
-                    print("Found loan with ID \(loan.id): bookID: \(loan.bookID), borrowerID: \(loan.borrowerID), date borrowed:\(loan.dateBorrowed), date returned: \(returned)")
-                } else {
-                    print("No loan with id \(loanID)")
-                }
-            }
-            
+//            try dbQueue.write { db in
+//                let newBorrower = Borrowers(
+//                    id: nil, name: "Brad Pitt", email: "brad.pitt@gmail.com", phone: "021123987")
+//                try newBorrower.insert(db)
+//            }
+//            try dbQueue.read { db in
+//                let borrowers =
+//                    try Borrowers
+//                    .order(Borrowers.Columns.name)
+//                    .fetchAll(db)
+//                for borrower in borrowers {
+//                    print("borrowerID: \(borrower.id ?? fallbackValue), borrowerName: \(borrower.name)")
+//                }
+//            }
+//
+//            let bookID = 1
+//
+//            try dbQueue.read { db in
+//                if let book = try Books.fetchOne(db, key: bookID) {
+//                    print("Found book with ID \(book.id): \(book.title)")
+//                } else {
+//                    print("No book with id \(bookID)")
+//                }
+//            }
+//
+//            let loanID = 0
+//
+//            try dbQueue.read { db in
+//                if let loan = try Loans.fetchOne(db, key: loanID) {
+//                    let returned = loan.dateReturned ?? "Not Returned"
+//                    print(
+//                        "Found loan with ID \(loan.id): bookID: \(loan.bookID), borrowerID: \(loan.borrowerID), date borrowed:\(loan.dateBorrowed), date returned: \(returned)"
+//                    )
+ //               } else {
+//                    print("No loan with id \(loanID)")
+//                }
+//            }
+
         } catch {
             print(error)
         }
