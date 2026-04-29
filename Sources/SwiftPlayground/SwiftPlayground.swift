@@ -1,7 +1,7 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-// remember the Int? is unreliable do something about that 
+// remember the Int? is unreliable do something about that
 
 import Foundation
 import GRDB
@@ -105,63 +105,45 @@ func currentDate() -> String {
 }
 
 func loanBook(bookID: Int, borrowerID: Int, dbQueue: DatabaseQueue) {
-    try dbQueue.write { db in
-        do {
+    do {
+        try dbQueue.write { db in
             // find borrower with id
             if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
                 print("Found borrower with ID \(borrower.id ?? fallbackValue): \(borrower.name)")
             } else {
                 print("No borrower found with id \(borrowerID)")
+                return
             }
             // find book with id
             if let book = try Books.fetchOne(db, key: bookID) {
                 print("Found book with ID \(book.id): \(book.title)")
             } else {
                 print("No book with id \(bookID)")
+                return
             }
-            let alreadyLoaned = try Loans
-            .filter(Loans.Columns.bookID == bookID && Loans.Columns.dateReturned == nil)
-            .fetchOne(db)
+            let alreadyLoaned =
+                try Loans
+                .filter(Loans.Columns.bookID == bookID && Loans.Columns.dateReturned == nil)
+                .fetchOne(db)
 
             if alreadyLoaned != nil {
                 print("book already loaned")
+                return
             }
 
             let newLoan = Loans(
-            id: nil,
-            bookID: bookID,
-            borrowerID: borrowerID,
-            dateBorrowed: currentDate(),
-            dateReturned: nil
+                id: nil,
+                bookID: bookID,
+                borrowerID: borrowerID,
+                dateBorrowed: currentDate(),
+                dateReturned: nil
             )
             try newLoan.insert(db)
-            
+            print("Loan made correctly")
 
-        } catch {
-            print("error")
         }
-    }
-}
-func returnBook(bookID: Int, borrowerID: Int, dbQueue: DatabaseQueue) {
-    try dbQueue.write { db in
-        do {
-            // find borrower with id
-            if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
-                print("Found borrower with ID \(borrower.id ?? fallbackValue): \(borrower.name)")
-            } else {
-                print("No borrower found with id \(borrowerID)")
-            }
-            // find book with id
-            if let book = try Books.fetchOne(db, key: bookID) {
-                print("Found book found with ID \(book.id): \(book.title)")
-            } else {
-                print("No book found with id \(bookID)")
-            }
-
-
-        } catch {
-            print("error")
-        }
+    } catch {
+        print("error")
     }
 }
 
@@ -171,13 +153,14 @@ struct SwiftPlayground {
     static func main() {
         print(currentDate())
         let dbpath = "Sources/SwiftPlayground/bookDatabase.db"
-        /*
+        
         do {
             let dbQueue = try DatabaseQueue(path: dbpath)
             print("database connection succesful")
-
+            loanBook(bookID: 1, borrowerID: 1, dbQueue: dbQueue)
+        /*
             let borrowerID = 3
-
+        
             try dbQueue.write { db in
                 if var borrower = try Borrowers.fetchOne(db, key: borrowerID) {
                     print(
@@ -189,7 +172,7 @@ struct SwiftPlayground {
                     print("No borrower with id \(borrowerID)")
                 }
             }
-
+        
             try dbQueue.write { db in
                 let newBorrower = Borrowers(
                     id: nil, name: "Brad Pitt", email: "brad.pitt@gmail.com", phone: "021123987")
@@ -206,9 +189,9 @@ struct SwiftPlayground {
                     )
                 }
             }
-
+        
             let bookID = 1
-
+        
             try dbQueue.read { db in
                 if let book = try Books.fetchOne(db, key: bookID) {
                     print("Found book with ID \(book.id): \(book.title)")
@@ -216,9 +199,9 @@ struct SwiftPlayground {
                     print("No book with id \(bookID)")
                 }
             }
-
+        
             let loanID = 0
-
+        
             try dbQueue.read { db in
                 if let loan = try Loans.fetchOne(db, key: loanID) {
                     let returned = loan.dateReturned ?? "Not Returned"
@@ -229,10 +212,10 @@ struct SwiftPlayground {
                     print("No loan with id \(loanID)")
                 }
             }
-
+        */
         } catch {
             print(error)
         }
-        */
+        
     }
 }
