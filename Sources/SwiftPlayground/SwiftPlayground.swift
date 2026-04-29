@@ -147,75 +147,94 @@ func loanBook(bookID: Int, borrowerID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
+func returnBook(loanID: Int, dbQueue: DatabaseQueue) {
+    do {
+        try dbQueue.write { db in
+            if let loan = try Loans.fetchOne(db, key: loanID) {
+                print("Found loan with ID \(loan.id ?? fallbackValue).")
+            } else {
+                print("No borrower found with id \(loanID)")
+                return
+
+            if loan.dateReturned =! nil {
+                print("book already returned")
+                return
+            }
+            }
+        }
+    } catch {
+        print("error")
+    }
+}
 
 @main
 struct SwiftPlayground {
     static func main() {
         print(currentDate())
         let dbpath = "Sources/SwiftPlayground/bookDatabase.db"
-        
+
         do {
             let dbQueue = try DatabaseQueue(path: dbpath)
             print("database connection succesful")
-            loanBook(bookID: 1, borrowerID: 1, dbQueue: dbQueue)
-        /*
-            let borrowerID = 3
-        
-            try dbQueue.write { db in
-                if var borrower = try Borrowers.fetchOne(db, key: borrowerID) {
-                    print(
-                        "Found borrower with ID \(borrower.id ?? fallbackValue): \(borrower.name)")
-                    borrower.name = "Bradley Pitt"
-                    try borrower.update(db)
-                    print("New name is \(borrower.name)")
-                } else {
-                    print("No borrower with id \(borrowerID)")
+            loanBook(bookID: 2, borrowerID: 0, dbQueue: dbQueue)
+            /*
+                let borrowerID = 3
+            
+                try dbQueue.write { db in
+                    if var borrower = try Borrowers.fetchOne(db, key: borrowerID) {
+                        print(
+                            "Found borrower with ID \(borrower.id ?? fallbackValue): \(borrower.name)")
+                        borrower.name = "Bradley Pitt"
+                        try borrower.update(db)
+                        print("New name is \(borrower.name)")
+                    } else {
+                        print("No borrower with id \(borrowerID)")
+                    }
                 }
-            }
-        
-            try dbQueue.write { db in
-                let newBorrower = Borrowers(
-                    id: nil, name: "Brad Pitt", email: "brad.pitt@gmail.com", phone: "021123987")
-                try newBorrower.insert(db)
-            }
-            try dbQueue.read { db in
-                let borrowers =
-                    try Borrowers
-                    .order(Borrowers.Columns.name)
-                    .fetchAll(db)
-                for borrower in borrowers {
-                    print(
-                        "borrowerID: \(borrower.id ?? fallbackValue), borrowerName: \(borrower.name)"
-                    )
+            
+                try dbQueue.write { db in
+                    let newBorrower = Borrowers(
+                        id: nil, name: "Brad Pitt", email: "brad.pitt@gmail.com", phone: "021123987")
+                    try newBorrower.insert(db)
                 }
-            }
-        
-            let bookID = 1
-        
-            try dbQueue.read { db in
-                if let book = try Books.fetchOne(db, key: bookID) {
-                    print("Found book with ID \(book.id): \(book.title)")
-                } else {
-                    print("No book with id \(bookID)")
+                try dbQueue.read { db in
+                    let borrowers =
+                        try Borrowers
+                        .order(Borrowers.Columns.name)
+                        .fetchAll(db)
+                    for borrower in borrowers {
+                        print(
+                            "borrowerID: \(borrower.id ?? fallbackValue), borrowerName: \(borrower.name)"
+                        )
+                    }
                 }
-            }
-        
-            let loanID = 0
-        
-            try dbQueue.read { db in
-                if let loan = try Loans.fetchOne(db, key: loanID) {
-                    let returned = loan.dateReturned ?? "Not Returned"
-                    print(
-                        "Found loan with ID \(loan.id): bookID: \(loan.bookID), borrowerID: \(loan.borrowerID), date borrowed:\(loan.dateBorrowed), date returned: \(returned)"
-                    )
-                } else {
-                    print("No loan with id \(loanID)")
+            
+                let bookID = 1
+            
+                try dbQueue.read { db in
+                    if let book = try Books.fetchOne(db, key: bookID) {
+                        print("Found book with ID \(book.id): \(book.title)")
+                    } else {
+                        print("No book with id \(bookID)")
+                    }
                 }
-            }
-        */
+            
+                let loanID = 0
+            
+                try dbQueue.read { db in
+                    if let loan = try Loans.fetchOne(db, key: loanID) {
+                        let returned = loan.dateReturned ?? "Not Returned"
+                        print(
+                            "Found loan with ID \(loan.id): bookID: \(loan.bookID), borrowerID: \(loan.borrowerID), date borrowed:\(loan.dateBorrowed), date returned: \(returned)"
+                        )
+                    } else {
+                        print("No loan with id \(loanID)")
+                    }
+                }
+            */
         } catch {
             print(error)
         }
-        
+
     }
 }
