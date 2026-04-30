@@ -2,6 +2,7 @@
 // https://docs.swift.org/swift-book
 
 // remember the Int? is unreliable do something about that
+// remember the unavailable and available book functions, could be seen as repetitive
 
 import Foundation
 import GRDB
@@ -84,17 +85,28 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     }
 }
 
+func exampleFunction(dbQueue: DatabaseQueue) {
+    do {
+        try dbQueue.write { db in
+
+        }
+    } catch {
+        print("error")
+    }
+}
+
 func showMenu() {
     print("Choose an option:")
-    print("A - View Available/Unavailable Books")
-    print("B - Loan Book")
-    print("C - Return Book")
-    print("D - Search Book")
-    print("E - Add new Book")
-    print("F - Edit Book Records")
-    print("G - Register new Borrower")
-    print("H - Search Borrower")
-    print("I - Edit Borrower Records")
+    //    print("A - View Available Books")
+    //    print("B - View Unavailable Books")
+    //    print("C - Loan Book")
+    //    print("D - Return Book")
+    //    print("E - Search Book")
+    print("F - Add new Book")
+    print("G - Edit Book Records")
+    print("H - Register new Borrower")
+    print("I - Search Borrower")
+    print("J - Edit Borrower Records")
 }
 
 // got from stack overflow
@@ -150,16 +162,22 @@ func loanBook(bookID: Int, borrowerID: Int, dbQueue: DatabaseQueue) {
 func returnBook(loanID: Int, dbQueue: DatabaseQueue) {
     do {
         try dbQueue.write { db in
-            if let loan = try Loans.fetchOne(db, key: loanID) {
-                print("Found loan with ID \(loan.id ?? fallbackValue).")
-            } else {
-                print("No borrower found with id \(loanID)")
-                return
+            if var loan = try Loans.fetchOne(db, key: loanID) {
+                print(
+                    "Found loan with ID \(loan.id ?? fallbackValue): borrower id: \(loan.borrowerID), book id: \(loan.bookID))"
+                )
+                if loan.dateReturned != nil {
+                    print("book already returned")
+                    return
+                }
+                loan.dateReturned = currentDate()
+                try loan.update(db)
 
-            if loan.dateReturned =! nil {
-                print("book already returned")
+                print("book returned")
+
+            } else {
+                print("No loan found with id \(loanID)")
                 return
-            }
             }
         }
     } catch {
@@ -167,16 +185,97 @@ func returnBook(loanID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
+func availableBooks(dbQueue: DatabaseQueue) {
+    do {
+        try dbQueue.read { db in
+            let books = try Books.fetchAll(db)
+
+            for book in books {
+                let onLoan =
+                    try Loans
+                    .filter(Loans.Columns.bookID == book.id && Loans.Columns.dateReturned == nil)
+                    .fetchOne(db)
+
+                if onLoan == nil {
+                    print(book.id)
+                }
+
+            }
+        }
+    } catch {
+        print("error")
+    }
+}
+
+func unavailableBooks(dbQueue: DatabaseQueue) {
+    do {
+        try dbQueue.read { db in
+            let books = try Books.fetchAll(db)
+
+            for book in books {
+                let onLoan =
+                    try Loans
+                    .filter(Loans.Columns.bookID == book.id && Loans.Columns.dateReturned == nil)
+                    .fetchOne(db)
+
+                if onLoan != nil {
+                    print(book.id)
+                }
+
+            }
+        }
+    } catch {
+        print("error")
+    }
+}
+
+func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
+    do {
+        try dbQueue.read { db in
+            let books = try Books.fetchAll(db)
+            var bookFound = false
+
+            for book in books {
+                if book.title.lowercased().contains(bookSearch.lowercased()) {
+                    let onLoan =
+                        try Loans
+                        .filter(
+                            Loans.Columns.bookID == book.id && Loans.Columns.dateReturned == nil
+                        )
+                        .fetchOne(db)
+
+                    if onLoan == nil {
+                        print("book title: \(book.title), book availability: available")
+                    } else {
+                        print("book title: \(book.title), book availability: unavailable")
+                    }
+                    bookFound = true
+                } 
+            }
+            if bookFound == false {
+                print("no book found")
+            }
+        }
+    } catch {
+        print("error")
+    }
+}
+
+
 @main
 struct SwiftPlayground {
     static func main() {
-        print(currentDate())
         let dbpath = "Sources/SwiftPlayground/bookDatabase.db"
 
         do {
             let dbQueue = try DatabaseQueue(path: dbpath)
             print("database connection succesful")
-            loanBook(bookID: 2, borrowerID: 0, dbQueue: dbQueue)
+            //availableBooks(dbQueue: dbQueue)
+            //unavailableBooks(dbQueue: dbQueue)
+            //loanBook(bookID: 5, borrowerID: 0, dbQueue: dbQueue)
+            //returnBook(loanID: 4, dbQueue: dbQueue)
+            //searchBook(bookID: 1, dbQueue: dbQueue)
+            searchBook(bookSearch: "book i dont have", dbQueue: dbQueue)
             /*
                 let borrowerID = 3
             
