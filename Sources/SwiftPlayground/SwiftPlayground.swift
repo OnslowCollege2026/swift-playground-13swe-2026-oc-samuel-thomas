@@ -3,6 +3,12 @@
 
 // remember the Int? is unreliable do something about that
 // remember the unavailable and available book functions, could be seen as repetitive
+// remember to change the test types in testing
+// maybe add a required amount of numbers for the phone number
+// think about adding a unique factor to the email and phone, possibly not though as kids may use parents phone or email
+// search book/borrower and edit book/borrower should maybe be combined idk tho.
+// for search borrower be able to search by name email or phone or id similar thing with search book
+
 
 import Foundation
 import GRDB
@@ -35,7 +41,7 @@ struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
 struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
     static let databaseTableName = "books"
     /// the book ID
-    let id: Int
+    let id: Int?
     /// book title
     var title: String
     /// book author
@@ -102,10 +108,10 @@ func showMenu() {
     //    print("C - Loan Book")
     //    print("D - Return Book")
     //    print("E - Search Book")
-    print("F - Add new Book")
+    //    print("F - Add new Book")
     print("G - Edit Book Records")
-    print("H - Register new Borrower")
-    print("I - Search Borrower")
+    //    print("H - Register new Borrower")
+    //    print("I - Search Borrower")
     print("J - Edit Borrower Records")
 }
 
@@ -128,7 +134,7 @@ func loanBook(bookID: Int, borrowerID: Int, dbQueue: DatabaseQueue) {
             }
             // find book with id
             if let book = try Books.fetchOne(db, key: bookID) {
-                print("Found book with ID \(book.id): \(book.title)")
+                print("Found book with ID \(book.id ?? fallbackValue): \(book.title)")
             } else {
                 print("No book with id \(bookID)")
                 return
@@ -197,7 +203,7 @@ func availableBooks(dbQueue: DatabaseQueue) {
                     .fetchOne(db)
 
                 if onLoan == nil {
-                    print(book.id)
+                    print(book.id ?? fallbackValue)
                 }
 
             }
@@ -219,7 +225,7 @@ func unavailableBooks(dbQueue: DatabaseQueue) {
                     .fetchOne(db)
 
                 if onLoan != nil {
-                    print(book.id)
+                    print(book.id ?? fallbackValue)
                 }
 
             }
@@ -250,10 +256,98 @@ func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
                         print("book title: \(book.title), book availability: unavailable")
                     }
                     bookFound = true
-                } 
+                }
             }
             if bookFound == false {
                 print("no book found")
+            }
+        }
+    } catch {
+        print("error")
+    }
+}
+
+func addBook(bookTitle: String, bookAuthor: String, bookYearPublished: Int, dbQueue: DatabaseQueue)
+{
+    do {
+        try dbQueue.write { db in
+            let newBook = Books(
+                id: nil, title: bookTitle, author: bookAuthor, yearPublished: bookYearPublished)
+            if newBook.title == "" {
+                print("please enter a book title")
+                return
+            }
+            if newBook.author == "" {
+                print("please enter a book author")
+                return
+            }
+
+            try newBook.insert(db)
+            print("book succesfully added")
+        }
+    } catch {
+        print("error")
+    }
+}
+
+func editBook(bookID: Int, dbQueue: DatabaseQueue) {
+    do {
+        try dbQueue.write { db in
+            if var book = try Books.fetchOne(db, key: bookID) {
+                print( "Found book with ID \(book.id ?? fallbackValue): \(book.title)")
+                book.title = ""
+                try book.update(db)
+                print("New name is \(book.title)")
+            } else {
+                print("No borrower with id \(bookID)")
+            }
+        }
+    } catch {
+        print("error")
+    }
+}
+
+func addBorrower(borrowerName: String, borrowerEmail: String, borrowerPhone: String, dbQueue: DatabaseQueue)
+{
+    do {
+        try dbQueue.write { db in
+            let newBorrower = Borrowers(
+                id: nil, name: borrowerName, email: borrowerEmail, phone: borrowerPhone)
+            if newBorrower.name == "" {
+                print("please enter a borrower name")
+                return
+            }
+            if newBorrower.email == "" {
+                print("please enter a borrower email")
+                return
+            }
+            if newBorrower.phone == "" {
+                print("please enter a borrower phone")
+                return
+            }
+
+            try newBorrower.insert(db)
+            print("borrower succesfully added")
+        }
+    } catch {
+        print("error")
+    }
+}
+
+func searchBorrower(borrowerSearch: String, dbQueue: DatabaseQueue) {
+    do {
+        try dbQueue.read { db in
+            let borrowers = try Borrowers.fetchAll(db)
+            var borrowerFound = false
+
+            for borrower in borrowers {
+                if borrower.name.lowercased().contains(borrowerSearch.lowercased()) {
+                    print("id: \(borrower.id ?? fallbackValue), name: \(borrower.name), email: \(borrower.email), phone: \(borrower.phone)")
+                    borrowerFound = true
+                }
+            }
+            if borrowerFound == false {
+                print("no borrower found")
             }
         }
     } catch {
@@ -266,7 +360,6 @@ func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
 struct SwiftPlayground {
     static func main() {
         let dbpath = "Sources/SwiftPlayground/bookDatabase.db"
-
         do {
             let dbQueue = try DatabaseQueue(path: dbpath)
             print("database connection succesful")
@@ -275,7 +368,11 @@ struct SwiftPlayground {
             //loanBook(bookID: 5, borrowerID: 0, dbQueue: dbQueue)
             //returnBook(loanID: 4, dbQueue: dbQueue)
             //searchBook(bookID: 1, dbQueue: dbQueue)
-            searchBook(bookSearch: "book i dont have", dbQueue: dbQueue)
+            //searchBook(bookSearch: "The Alchemist", dbQueue: dbQueue)
+            //addBook( bookTitle: "The Picture of Dorian Gray", bookAuthor: "Oscar Wilde",bookYearPublished: 1890, dbQueue: dbQueue)
+            //addBorrower(borrowerName: "Archie Domaneschi", borrowerEmail: "ArchieDomaneschi@student.onslow.school.nz", borrowerPhone: "0210220230", dbQueue: dbQueue)
+            searchBorrower(borrowerSearch: "s", dbQueue: dbQueue)
+
             /*
                 let borrowerID = 3
             
