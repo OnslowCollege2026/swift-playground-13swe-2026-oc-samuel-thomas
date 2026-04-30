@@ -5,7 +5,7 @@
 // remember the unavailable and available book functions, could be seen as repetitive
 // remember to change the test types in testing
 // maybe add a required amount of numbers for the phone number
-// think about adding a unique factor to the email and phone, possibly not though as kids may use parents phone or email
+// think about adding a unique factor to the email and phone, possibly not though as kids may use parents phone or email, maybe just make email unique and phone not unique?
 // search book/borrower and edit book/borrower should maybe be combined idk tho.
 // for search borrower be able to search by name email or phone or id similar thing with search book
 
