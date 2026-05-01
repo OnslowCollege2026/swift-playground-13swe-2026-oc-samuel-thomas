@@ -14,6 +14,9 @@
 // show list of borrowers current loans or all loans
 // make sure things that shouldnt be null or should be unique are.
 // remember refinements
+// maybe make it so books are loanes by searching them first?
+// change case c
+// fix all the silly stuff in the cases
 
 import Foundation
 import GRDB
@@ -108,10 +111,10 @@ func showMenu() {
     print("H - Edit Book Records")
     print("I - Register new Borrower")
     print("J - Search Borrower")
-    print("K - Delete Borrower")
+    //print("K - Delete Borrower")
     print("L - Edit Borrower Records")
-    print("M - View Current Loans")
-    print("N - Exit")
+    // print("M - View Current Loans")
+    print("X - Exit")
 }
 
 // got from stack overflow
@@ -445,12 +448,65 @@ struct SwiftPlayground {
             print("database connection succesful")
             var running  = true
             while running {
+                showMenu()
                 let option = readLine()
                 switch option?.uppercased() {
                 
                 case "A":
                     availableBooks(dbQueue: dbQueue)
-                case "N":
+                case "B":
+                    unavailableBooks(dbQueue: dbQueue)
+                case "C":
+                    print("enter book id: ")
+                    let bookID = Int(readLine() ?? "") ?? fallbackValue
+                    print("enter borrower id: ")
+                    let borrowerID = Int(readLine() ?? "") ?? fallbackValue
+                    loanBook(bookID: bookID, borrowerID: borrowerID, dbQueue: dbQueue)
+                case "D":
+                    print("enter loan id: ")
+                    let loanID = Int(readLine() ?? "") ?? fallbackValue
+                    returnBook(loanID: loanID, dbQueue: dbQueue)
+                case "E":
+                    print("enter book name: ")
+                    let search = readLine() ?? ""
+                    searchBook(bookSearch: search, dbQueue: dbQueue)
+                case "F":
+                    print("enter book name: ")
+                    let bookTitle = readLine() ?? ""
+                    print("enter author name: ")
+                    let bookAuthor = readLine() ?? ""
+                    print("enter year published: ")
+                    let yearPublished = Int(readLine() ?? "") ?? fallbackValue
+                    addBook(bookTitle: bookTitle, bookAuthor: bookAuthor, bookYearPublished: yearPublished, dbQueue: dbQueue)
+                case "G":
+                    print("enter book id: ")
+                    let bookID = Int(readLine() ?? "") ?? fallbackValue
+                    deleteBook(bookID: bookID, dbQueue: dbQueue)
+                case "H":
+                    print("enter book id: ")
+                    let bookID = Int(readLine() ?? "") ?? fallbackValue
+                    editBook(bookID: bookID, dbQueue: dbQueue)
+                case "I":
+                    print("enter borrower name: ")
+                    let borrowerName = readLine() ?? ""
+                    print("enter borrower email: ")
+                    let borrowerEmail = readLine() ?? ""
+                    print("enter borrower phone: ")
+                    let borrowerPhone = readLine() ?? ""
+                    addBorrower(borrowerName: borrowerName, borrowerEmail: borrowerEmail, borrowerPhone: borrowerPhone, dbQueue: dbQueue)
+                case "J":
+                    print("enter borrower name: ")
+                    let borrowerName = readLine() ?? ""
+                    searchBorrower(borrowerSearch: borrowerName, dbQueue: dbQueue)
+                case "K":
+                print("delete borrowe not added yet")
+                case "L":
+                    print("enter borrower id: ")
+                    let borrowerID = Int(readLine() ?? "") ?? fallbackValue
+                    editBorrower(borrowerID: borrowerID, dbQueue: dbQueue)
+                case "M":
+                    print("show loans not added yet")
+                case "X":
                     running = false
                     print("goodbye")
                 default:
