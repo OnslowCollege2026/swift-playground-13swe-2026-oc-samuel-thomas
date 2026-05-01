@@ -9,7 +9,9 @@
 // search book/borrower and edit book/borrower should maybe be combined idk tho.
 // for search borrower be able to search by name email or phone or id similar thing with search book
 // remember to add documentation throughout
-
+// possible change things to read line
+// when something is deleted then a new one is added there is gap in id.
+// show list of borrowers current loans
 
 import Foundation
 import GRDB
@@ -48,7 +50,7 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// book author
     var author: String
     /// year book was published
-    let yearPublished: Int
+    var yearPublished: Int
 
     enum CodingKeys: String, CodingKey {
         case id = "bookID"
@@ -92,28 +94,21 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     }
 }
 
-func exampleFunction(dbQueue: DatabaseQueue) {
-    do {
-        try dbQueue.write { db in
-
-        }
-    } catch {
-        print("error")
-    }
-}
-
 func showMenu() {
     print("Choose an option:")
-    //    print("A - View Available Books")
-    //    print("B - View Unavailable Books")
-    //    print("C - Loan Book")
-    //    print("D - Return Book")
-    //    print("E - Search Book")
-    //    print("F - Add new Book")
-    print("G - Edit Book Records")
-    //    print("H - Register new Borrower")
-    //    print("I - Search Borrower")
-    print("J - Edit Borrower Records")
+    print("A - View Available Books")
+    print("B - View Unavailable Books")
+    print("C - Loan Book")
+    print("D - Return Book")
+    print("E - Search Book")
+    print("F - Add new Book")
+    print("G - Delete Book")
+    print("H - Edit Book Records")
+    print("I - Register new Borrower")
+    print("J - Search Borrower")
+    print("K - Delete Borrower")
+    print("L - Edit Borrower Records")
+    print("M - View Current Loans")
 }
 
 // got from stack overflow
@@ -236,6 +231,7 @@ func unavailableBooks(dbQueue: DatabaseQueue) {
     }
 }
 
+
 func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
     do {
         try dbQueue.read { db in
@@ -291,16 +287,62 @@ func addBook(bookTitle: String, bookAuthor: String, bookYearPublished: Int, dbQu
     }
 }
 
+func deleteBook(bookID: Int, dbQueue: DatabaseQueue) {
+    do {
+        try dbQueue.write { db in
+            if let book = try Books.fetchOne(db, key: bookID) {
+                print("Found book with ID \(book.id ?? fallbackValue): \(book.title)")
+                let onLoan =
+                    try Loans
+                    .filter(
+                        Loans.Columns.bookID == bookID && Loans.Columns.dateReturned == nil
+                    )
+                    .fetchOne(db)
+
+                if onLoan != nil {
+                    print("can't delete book as book is currently on loan")
+                    return
+                }
+                try book.delete(db)
+                print("book succesfuly deleted")
+            } else {
+                print("No book with id \(bookID)")
+            }
+
+        }
+    } catch {
+        print("error")
+    }
+}
+
 func editBook(bookID: Int, dbQueue: DatabaseQueue) {
     do {
         try dbQueue.write { db in
             if var book = try Books.fetchOne(db, key: bookID) {
-                print( "Found book with ID \(book.id ?? fallbackValue): \(book.title)")
-                book.title = ""
+                print("Found book with ID \(book.id ?? fallbackValue): \(book.title)")
+                print("enter new book title or press enter to keep \(book.title)")
+                if let newTitle = readLine(), newTitle != "" {
+                    book.title = newTitle
+                }
+                print("enter new book author or press enter to keep \(book.author)")
+                if let newAuthor = readLine(), newAuthor != "" {
+                    book.author = newAuthor
+                }
+                print("enter new book year published or press enter to keep \(book.yearPublished)")
+                if let newYearPublished = readLine(), newYearPublished != "" {
+                    if let newYearPublished = Int(newYearPublished) {
+                        book.yearPublished = newYearPublished
+                    } else {
+                        print("invalid year entered")
+                    }
+                }
                 try book.update(db)
-                print("New name is \(book.title)")
+                print("book succesfully updated")
+                print(
+                    "id: \(book.id ?? fallbackValue) title: \(book.title), author: \(book.author), year published: \(book.yearPublished)"
+                )
             } else {
-                print("No borrower with id \(bookID)")
+                print("No book with id \(bookID)")
             }
         }
     } catch {
@@ -308,8 +350,9 @@ func editBook(bookID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
-func addBorrower(borrowerName: String, borrowerEmail: String, borrowerPhone: String, dbQueue: DatabaseQueue)
-{
+func addBorrower(
+    borrowerName: String, borrowerEmail: String, borrowerPhone: String, dbQueue: DatabaseQueue
+) {
     do {
         try dbQueue.write { db in
             let newBorrower = Borrowers(
@@ -343,7 +386,9 @@ func searchBorrower(borrowerSearch: String, dbQueue: DatabaseQueue) {
 
             for borrower in borrowers {
                 if borrower.name.lowercased().contains(borrowerSearch.lowercased()) {
-                    print("id: \(borrower.id ?? fallbackValue), name: \(borrower.name), email: \(borrower.email), phone: \(borrower.phone)")
+                    print(
+                        "id: \(borrower.id ?? fallbackValue), name: \(borrower.name), email: \(borrower.email), phone: \(borrower.phone)"
+                    )
                     borrowerFound = true
                 }
             }
@@ -356,6 +401,37 @@ func searchBorrower(borrowerSearch: String, dbQueue: DatabaseQueue) {
     }
 }
 
+func editBorrower(borrowerID: Int, dbQueue: DatabaseQueue) {
+    do {
+        try dbQueue.write { db in
+            if var borrower = try Borrowers.fetchOne(db, key: borrowerID) {
+                print("Found borrower with ID \(borrower.id ?? fallbackValue): \(borrower.name)")
+                print("enter new borrower name or press enter to keep \(borrower.name)")
+                if let newName = readLine(), newName != "" {
+                    borrower.name = newName
+                }
+                print("enter new borrower email or press enter to keep \(borrower.email)")
+                if let newEmail = readLine(), newEmail != "" {
+                    borrower.email = newEmail
+                }
+                print("enter new borrower phone number or press enter to keep \(borrower.phone)")
+                if let newPhone = readLine(), newPhone != "" {
+                    borrower.phone = newPhone
+                }
+                try borrower.update(db)
+                print("borrower succesfully updated")
+                print(
+                    "id: \(borrower.id ?? fallbackValue) name: \(borrower.name), email: \(borrower.email), phone: \(borrower.phone)"
+                )
+            } else {
+                print("No borrower with id \(borrowerID)")
+            }
+        }
+
+    } catch {
+        print("error")
+    }
+}
 
 @main
 struct SwiftPlayground {
@@ -370,9 +446,13 @@ struct SwiftPlayground {
             //returnBook(loanID: 4, dbQueue: dbQueue)
             //searchBook(bookID: 1, dbQueue: dbQueue)
             //searchBook(bookSearch: "The Alchemist", dbQueue: dbQueue)
-            //addBook( bookTitle: "The Picture of Dorian Gray", bookAuthor: "Oscar Wilde",bookYearPublished: 1890, dbQueue: dbQueue)
+            //addBook( bookTitle: "The Hunger Games", bookAuthor: "Suzanne Collins",bookYearPublished: 2008, dbQueue: dbQueue)
             //addBorrower(borrowerName: "Archie Domaneschi", borrowerEmail: "ArchieDomaneschi@student.onslow.school.nz", borrowerPhone: "0210220230", dbQueue: dbQueue)
-            searchBorrower(borrowerSearch: "s", dbQueue: dbQueue)
+            //searchBorrower(borrowerSearch: "s", dbQueue: dbQueue)
+            // editBook(bookID: 4, dbQueue: dbQueue)
+            //editBorrower(borrowerID: 0, dbQueue: dbQueue)
+            // allBooks(dbQueue: dbQueue)
+            //deleteBook(bookID: 4, dbQueue: dbQueue)
 
             /*
                 let borrowerID = 3
