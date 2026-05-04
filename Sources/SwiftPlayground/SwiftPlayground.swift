@@ -474,7 +474,8 @@ struct SwiftPlayground {
             let dbQueue = try DatabaseQueue(path: dbpath)
             print("database connection succesful")
             // /*
-            var running  = true
+            var running = true
+            var pressEnter = true
             while running {
                 showMenu()
                 let option = readLine()
@@ -536,6 +537,10 @@ struct SwiftPlayground {
                     print("goodbye")
                 default:
                 print("??")    
+                }
+                while pressEnter {
+                    print("press enter to continue")
+                    
                 }
             }
             // */
