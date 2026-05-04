@@ -10,12 +10,10 @@
 // possible change things to read line
 // make sure things that shouldnt be null or should be unique are.
 // fix all the silly stuff in the cases
-// maybe put description in structs
 // include amount of books
 // maybe put the books' current loans when searched?
 // gotta sort out all the question marks
 // maybe for all the return/loan/edit books it also searches? and also for borrowers stuff
-// maybe make it so delete borrower cant be deleted if currently has loaned books
 // change it so enter to continue and clear
 // when searching for book can also by author or maybe id.
 
@@ -46,7 +44,7 @@ struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
         case phone
     }
     enum Columns {
-        static let id = Column("borrowersID")
+        static let id = Column("borrowerID")
         static let name = Column("name")
         static let email = Column("email")
         static let phone = Column("phone")
@@ -77,7 +75,7 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
     enum Columns {
         static let id = Column("bookID")
         static let title = Column("title")
-        static let author = Column("Author")
+        static let author = Column("author")
         static let yearPublished = Column("yearPublished")
     }
 }
@@ -143,7 +141,7 @@ func loanBook(bookID: Int, borrowerID: Int, dbQueue: DatabaseQueue) {
         try dbQueue.write { db in
             // find borrower with id
             if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
-                print("Found borrower with ID \(borrower.id ?? fallbackValue): \(borrower.name)")
+                print("Found borrower with \(borrower.summary())")
             } else {
                 print("No borrower found with id \(borrowerID)")
                 return
@@ -186,7 +184,7 @@ func returnBook(loanID: Int, dbQueue: DatabaseQueue) {
         try dbQueue.write { db in
             if var loan = try Loans.fetchOne(db, key: loanID) {
                 print(
-                    "Found loan with ID \(loan.id ?? fallbackValue): borrower id: \(loan.borrowerID), book id: \(loan.bookID))"
+                    "Found loan with \(loan.summary())"
                 )
                 if loan.dateReturned != nil {
                     print("book already returned")
@@ -206,7 +204,7 @@ func returnBook(loanID: Int, dbQueue: DatabaseQueue) {
         print("error")
     }
 }
-
+/*
 func availableBooks(dbQueue: DatabaseQueue) {
     do {
         try dbQueue.read { db in
@@ -250,7 +248,7 @@ func unavailableBooks(dbQueue: DatabaseQueue) {
         print("error")
     }
 }
-
+*/
 
 func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
     do {
@@ -268,9 +266,9 @@ func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
                         .fetchOne(db)
 
                     if onLoan == nil {
-                        print(Books.summary(book))
+                        print("\(book.summary()) | Status: Available")
                     } else {
-                        print(Books.summary(book))
+                        print("\(book.summary()) | Status: Unavailable")
                     }
                     bookFound = true
                 }
@@ -310,22 +308,22 @@ func deleteBook(bookID: Int, dbQueue: DatabaseQueue) {
     do {
         try dbQueue.write { db in
             if let book = try Books.fetchOne(db, key: bookID) {
-                print("Found book with ID \(book.id ?? fallbackValue): \(book.title)")
-                let onLoan =
+                print("Found book with \(book.summary())")
+                let activeLoan =
                     try Loans
                     .filter(
                         Loans.Columns.bookID == bookID && Loans.Columns.dateReturned == nil
                     )
                     .fetchOne(db)
 
-                if onLoan != nil {
+                if activeLoan != nil {
                     print("can't delete book as book is currently on loan")
                     return
                 }
                 try book.delete(db)
                 print("book succesfuly deleted")
             } else {
-                print("No book with id \(bookID)")
+                print("No book found with id \(bookID)")
             }
 
         }
@@ -338,7 +336,7 @@ func editBook(bookID: Int, dbQueue: DatabaseQueue) {
     do {
         try dbQueue.write { db in
             if var book = try Books.fetchOne(db, key: bookID) {
-                print("Found book with ID \(book.id ?? fallbackValue): \(book.title)")
+                print("Found book with \(book.summary())")
                 print("enter new book title or press enter to keep \(book.title)")
                 if let newTitle = readLine(), newTitle != "" {
                     book.title = newTitle
@@ -357,9 +355,7 @@ func editBook(bookID: Int, dbQueue: DatabaseQueue) {
                 }
                 try book.update(db)
                 print("book succesfully updated")
-                print(
-                    "id: \(book.id ?? fallbackValue) title: \(book.title), author: \(book.author), year published: \(book.yearPublished)"
-                )
+                print(book.summary())
             } else {
                 print("No book with id \(bookID)")
             }
@@ -403,9 +399,8 @@ func searchBorrower(borrowerSearch: String, dbQueue: DatabaseQueue) {
 
             for borrower in borrowers {
                 if borrower.name.lowercased().contains(borrowerSearch.lowercased()) {
-                    print(
-                        "id: \(borrower.id ?? fallbackValue), name: \(borrower.name), email: \(borrower.email), phone: \(borrower.phone)"
-                    )
+                    print(borrower.summary())
+                    
                     borrowerFound = true
                 }
             }
@@ -422,7 +417,7 @@ func editBorrower(borrowerID: Int, dbQueue: DatabaseQueue) {
     do {
         try dbQueue.write { db in
             if var borrower = try Borrowers.fetchOne(db, key: borrowerID) {
-                print("Found borrower with ID \(borrower.id ?? fallbackValue): \(borrower.name)")
+                print("Found borrower with \(borrower.summary())")
                 print("enter new borrower name or press enter to keep \(borrower.name)")
                 if let newName = readLine(), newName != "" {
                     borrower.name = newName
@@ -437,9 +432,7 @@ func editBorrower(borrowerID: Int, dbQueue: DatabaseQueue) {
                 }
                 try borrower.update(db)
                 print("borrower succesfully updated")
-                print(
-                    "id: \(borrower.id ?? fallbackValue) name: \(borrower.name), email: \(borrower.email), phone: \(borrower.phone)"
-                )
+                print(borrower.summary())
             } else {
                 print("No borrower with id \(borrowerID)")
             }
@@ -454,7 +447,18 @@ func deleteBorrower(borrowerID: Int, dbQueue: DatabaseQueue) {
     do {
         try dbQueue.write { db in
             if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
-                print("Found borrower with ID \(borrower.id ?? fallbackValue): \(borrower.name)")
+                print("Found borrower with \(borrower.summary())")
+                let activeLoan =
+                    try Loans
+                    .filter(
+                        Loans.Columns.borrowerID == borrowerID && Loans.Columns.dateReturned == nil
+                    )
+                    .fetchOne(db)
+
+                if activeLoan != nil {
+                    print("can't delete book as book is currently on loan")
+                    return
+                }
                 try borrower.delete(db)
                 print("borrower succesfuly deleted")
             } else {
@@ -475,7 +479,6 @@ struct SwiftPlayground {
             print("database connection succesful")
             // /*
             var running = true
-            var pressEnter = true
             while running {
                 showMenu()
                 let option = readLine()
@@ -535,13 +538,14 @@ struct SwiftPlayground {
                 case "0":
                     running = false
                     print("goodbye")
+                    // make it so it doesn't ask for press enter to continue
                 default:
                 print("??")    
                 }
-                while pressEnter {
-                    print("press enter to continue")
+                print("press enter to continue: ")
+                _ = readLine()
                     
-                }
+                
             }
             // */
         } catch {
