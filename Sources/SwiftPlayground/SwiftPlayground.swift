@@ -100,21 +100,23 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
 }
 
 func showMenu() {
-    print("Choose an option:")
-    print("A - View Available Books")
-    print("B - View Unavailable Books")
-    print("C - Loan Book")
-    print("D - Return Book")
-    print("E - Search Book")
-    print("F - Add new Book")
-    print("G - Delete Book")
-    print("H - Edit Book Records")
-    print("I - Register new Borrower")
-    print("J - Search Borrower")
-    //print("K - Delete Borrower")
-    print("L - Edit Borrower Records")
-    // print("M - View Current Loans")
-    print("X - Exit")
+    print("""
+    Choose an option:
+    A - View Available Books
+    B - View Unavailable Books
+    C - Loan Book
+    D - Return Book
+    E - Search Book
+    F - Add new Book
+    G - Delete Book
+    H - Edit Book Records
+    I - Register new Borrower
+    J - Search Borrower
+    K - Delete Borrower
+    L - Edit Borrower Records
+    M - View Current Loans
+    X - Exit
+    """)
 }
 
 // got from stack overflow
