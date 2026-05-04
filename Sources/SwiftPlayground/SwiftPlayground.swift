@@ -34,7 +34,7 @@ struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
     var phone: String
 
     func summary() -> String{
-        return "ID: \(id, default: "N/A") | Name: \(name) | Email: \(email) | Phone: \(phone)"
+        return "ID: \(formatID(id: id)) | Name: \(name) | Email: \(email) | Phone: \(phone)"
     }
 
     enum CodingKeys: String, CodingKey {
@@ -62,7 +62,7 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
     var yearPublished: Int
 
     func summary() -> String{
-        return "ID: \(id, default: "N/A") | Title: \(title) | Author: \(author) | Year Published: \(yearPublished)"
+        return "ID: \(formatID(id: id)) | Title: \(title) | Author: \(author) | Year Published: \(yearPublished)"
     }
 
 
@@ -93,7 +93,7 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     var dateReturned: String?
 
     func summary() -> String{
-        return "ID: \(id, default: "N/A") | Book ID: \(bookID) | Borrower ID: \(borrowerID) | Date Borrowed: \(dateBorrowed) | Date Returned: \(dateReturned, default: "N/A")"
+        return "ID: \(formatID(id: id)) | Book ID: \(bookID) | Borrower ID: \(borrowerID) | Date Borrowed: \(dateBorrowed) | Date Returned: \(dateReturned, default: "N/A")"
     }
 
     enum CodingKeys: String, CodingKey {
@@ -128,7 +128,14 @@ func showMenu() {
     0 - Exit
     """)
 }
+func formatID(id: Int?) -> String {
+    if let id = id {
+        return "\(id)"
+    } else {
+        return "N/A"
+    }
 
+}
 // got from stack overflow
 func currentDate() -> String {
     let dateFormatter = DateFormatter()
@@ -456,7 +463,7 @@ func deleteBorrower(borrowerID: Int, dbQueue: DatabaseQueue) {
                     .fetchOne(db)
 
                 if activeLoan != nil {
-                    print("can't delete book as book is currently on loan")
+                    print("can't delete borrower as borrower has books loaned")
                     return
                 }
                 try borrower.delete(db)
