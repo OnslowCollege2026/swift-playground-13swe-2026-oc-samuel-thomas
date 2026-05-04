@@ -2,21 +2,23 @@
 // https://docs.swift.org/swift-book
 
 // remember the Int? possibly unreliable and might need to do something about that
-// remember the unavailable and available book functions, could be seen as repetitive
 // remember to change the test types in testing
 // maybe add a required amount of numbers for the phone number
 // think about adding a unique factor to the email and phone, possibly not though as kids may use parents phone or email, maybe just make email unique and phone not unique?
-// search book/borrower and edit book/borrower should maybe be combined idk tho.
 // for search borrower be able to search by name email or phone or id similar thing with search book
 // remember to add documentation throughout
 // possible change things to read line
-// when something is deleted then a new one is added there is gap in id, change this.
-// show list of borrowers current loans or all loans
 // make sure things that shouldnt be null or should be unique are.
-// remember refinements
-// maybe make it so books are loanes by searching them first?
-// change case c
 // fix all the silly stuff in the cases
+// maybe put description in structs
+// include amount of books
+// maybe put the books' current loans when searched?
+// gotta sort out all the question marks
+// maybe for all the return/loan/edit books it also searches? and also for borrowers stuff
+// maybe make it so delete borrower cant be deleted if currently has loaned books
+// change it so enter to continue and clear
+// when searching for book can also by author or maybe id.
+
 
 import Foundation
 import GRDB
@@ -32,6 +34,10 @@ struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
     var email: String
     /// borrowers phone number
     var phone: String
+
+    func summary() -> String{
+        return "ID: \(id, default: "N/A") | Name: \(name) | Email: \(email) | Phone: \(phone)"
+    }
 
     enum CodingKeys: String, CodingKey {
         case id = "borrowerID"
@@ -56,6 +62,11 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
     var author: String
     /// year book was published
     var yearPublished: Int
+
+    func summary() -> String{
+        return "ID: \(id, default: "N/A") | Title: \(title) | Author: \(author) | Year Published: \(yearPublished)"
+    }
+
 
     enum CodingKeys: String, CodingKey {
         case id = "bookID"
@@ -83,6 +94,10 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// date book was returned , nullable
     var dateReturned: String?
 
+    func summary() -> String{
+        return "ID: \(id, default: "N/A") | Book ID: \(bookID) | Borrower ID: \(borrowerID) | Date Borrowed: \(dateBorrowed) | Date Returned: \(dateReturned, default: "N/A")"
+    }
+
     enum CodingKeys: String, CodingKey {
         case id = "loanID"
         case bookID
@@ -102,20 +117,17 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
 func showMenu() {
     print("""
     Choose an option:
-    A - View Available Books
-    B - View Unavailable Books
-    C - Loan Book
-    D - Return Book
-    E - Search Book
-    F - Add new Book
-    G - Delete Book
-    H - Edit Book Records
-    I - Register new Borrower
-    J - Search Borrower
-    K - Delete Borrower
-    L - Edit Borrower Records
-    M - View Current Loans
-    X - Exit
+    1 - Search Book (includes current loans)
+    2 - Loan Book
+    3 - Return Book
+    4 - Add new Book
+    5 - Delete Book
+    6 - Edit Book Records
+    7 - Search Borrower (includes current loans)
+    8 - Register new Borrower
+    9 - Delete Borrower // not done yet
+    10 - Edit Borrower Records
+    0 - Exit
     """)
 }
 
@@ -256,9 +268,9 @@ func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
                         .fetchOne(db)
 
                     if onLoan == nil {
-                        print("book title: \(book.title), book availability: available")
+                        print(Books.summary(book))
                     } else {
-                        print("book title: \(book.title), book availability: unavailable")
+                        print(Books.summary(book))
                     }
                     bookFound = true
                 }
@@ -272,8 +284,7 @@ func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
     }
 }
 
-func addBook(bookTitle: String, bookAuthor: String, bookYearPublished: Int, dbQueue: DatabaseQueue)
-{
+func addBook(bookTitle: String, bookAuthor: String, bookYearPublished: Int, dbQueue: DatabaseQueue) {
     do {
         try dbQueue.write { db in
             let newBook = Books(
@@ -358,9 +369,7 @@ func editBook(bookID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
-func addBorrower(
-    borrowerName: String, borrowerEmail: String, borrowerPhone: String, dbQueue: DatabaseQueue
-) {
+func addBorrower(borrowerName: String, borrowerEmail: String, borrowerPhone: String, dbQueue: DatabaseQueue) {
     do {
         try dbQueue.write { db in
             let newBorrower = Borrowers(
@@ -441,6 +450,22 @@ func editBorrower(borrowerID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
+func deleteBorrower(borrowerID: Int, dbQueue: DatabaseQueue) {
+    do {
+        try dbQueue.write { db in
+            if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
+                print("Found borrower with ID \(borrower.id ?? fallbackValue): \(borrower.name)")
+                try borrower.delete(db)
+                print("borrower succesfuly deleted")
+            } else {
+                print("No borrower with id \(borrowerID)")
+            }
+        }
+    } catch {
+        print("error")
+    }
+}
+
 @main
 struct SwiftPlayground {
     static func main() {
@@ -448,31 +473,29 @@ struct SwiftPlayground {
         do {
             let dbQueue = try DatabaseQueue(path: dbpath)
             print("database connection succesful")
+            // /*
             var running  = true
             while running {
                 showMenu()
                 let option = readLine()
                 switch option?.uppercased() {
                 
-                case "A":
-                    availableBooks(dbQueue: dbQueue)
-                case "B":
-                    unavailableBooks(dbQueue: dbQueue)
-                case "C":
+                case "1":
+                    print("enter book name: ")
+                    print("or enter nothing and view all books")
+                    let search = readLine() ?? ""
+                    searchBook(bookSearch: search, dbQueue: dbQueue)
+                case "2":
                     print("enter book id: ")
                     let bookID = Int(readLine() ?? "") ?? fallbackValue
                     print("enter borrower id: ")
                     let borrowerID = Int(readLine() ?? "") ?? fallbackValue
                     loanBook(bookID: bookID, borrowerID: borrowerID, dbQueue: dbQueue)
-                case "D":
+                case "3":
                     print("enter loan id: ")
                     let loanID = Int(readLine() ?? "") ?? fallbackValue
                     returnBook(loanID: loanID, dbQueue: dbQueue)
-                case "E":
-                    print("enter book name: ")
-                    let search = readLine() ?? ""
-                    searchBook(bookSearch: search, dbQueue: dbQueue)
-                case "F":
+                case "4":
                     print("enter book name: ")
                     let bookTitle = readLine() ?? ""
                     print("enter author name: ")
@@ -480,15 +503,19 @@ struct SwiftPlayground {
                     print("enter year published: ")
                     let yearPublished = Int(readLine() ?? "") ?? fallbackValue
                     addBook(bookTitle: bookTitle, bookAuthor: bookAuthor, bookYearPublished: yearPublished, dbQueue: dbQueue)
-                case "G":
+                case "5":
                     print("enter book id: ")
                     let bookID = Int(readLine() ?? "") ?? fallbackValue
                     deleteBook(bookID: bookID, dbQueue: dbQueue)
-                case "H":
+                case "6":
                     print("enter book id: ")
                     let bookID = Int(readLine() ?? "") ?? fallbackValue
                     editBook(bookID: bookID, dbQueue: dbQueue)
-                case "I":
+                case "7":
+                    print("enter borrower name: a lot to do here still ")
+                    let borrowerName = readLine() ?? ""
+                    searchBorrower(borrowerSearch: borrowerName, dbQueue: dbQueue)
+                case "8":
                     print("enter borrower name: ")
                     let borrowerName = readLine() ?? ""
                     print("enter borrower email: ")
@@ -496,28 +523,26 @@ struct SwiftPlayground {
                     print("enter borrower phone: ")
                     let borrowerPhone = readLine() ?? ""
                     addBorrower(borrowerName: borrowerName, borrowerEmail: borrowerEmail, borrowerPhone: borrowerPhone, dbQueue: dbQueue)
-                case "J":
-                    print("enter borrower name: ")
-                    let borrowerName = readLine() ?? ""
-                    searchBorrower(borrowerSearch: borrowerName, dbQueue: dbQueue)
-                case "K":
-                print("delete borrowe not added yet")
-                case "L":
+                case "9":
+                    print("enter borrower id: ")
+                    let borrowerID = Int(readLine() ?? "") ?? fallbackValue
+                    deleteBorrower(borrowerID: borrowerID, dbQueue: dbQueue)
+                case "10":
                     print("enter borrower id: ")
                     let borrowerID = Int(readLine() ?? "") ?? fallbackValue
                     editBorrower(borrowerID: borrowerID, dbQueue: dbQueue)
-                case "M":
-                    print("show loans not added yet")
-                case "X":
+                case "0":
                     running = false
                     print("goodbye")
                 default:
                 print("??")    
                 }
             }
+            // */
         } catch {
             print(error)
         }
 
     }
 }
+
