@@ -1,6 +1,12 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
+// change search so it can take multiple things
+// show borrower loans
+// remember ||
+// search so if nothing is entered it prints all
+// include amount of books
+
 // remember the Int? possibly unreliable and might need to do something about that
 // remember to change the test types in testing
 // maybe add a required amount of numbers for the phone number
@@ -93,7 +99,7 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     var dateReturned: String?
 
     func summary() -> String{
-        return "ID: \(formatID(id: id)) | Book ID: \(bookID) | Borrower ID: \(borrowerID) | Date Borrowed: \(dateBorrowed) | Date Returned: \(dateReturned, default: "N/A")"
+        return "ID: \(formatID(id: id)) | Book ID: \(bookID) | Borrower ID: \(borrowerID) | Date Borrowed: \(dateBorrowed) | Date Returned: \(dateReturned ?? "N/A")"
     }
 
     enum CodingKeys: String, CodingKey {
