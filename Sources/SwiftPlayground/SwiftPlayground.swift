@@ -1,13 +1,10 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-// change search so it can take multiple things
 // show borrower loans
-// remember ||
-// search so if nothing is entered it prints all
 // include amount of books
-
-// remember the Int? possibly unreliable and might need to do something about that
+// screen clears after user presses enter
+// make it so to loan a book id isnt necessary
 // remember to change the test types in testing
 // maybe add a required amount of numbers for the phone number
 // think about adding a unique factor to the email and phone, possibly not though as kids may use parents phone or email, maybe just make email unique and phone not unique?
@@ -16,13 +13,11 @@
 // possible change things to read line
 // make sure things that shouldnt be null or should be unique are.
 // fix all the silly stuff in the cases
-// include amount of books
 // maybe put the books' current loans when searched?
 // gotta sort out all the question marks
 // maybe for all the return/loan/edit books it also searches? and also for borrowers stuff
 // change it so enter to continue and clear
 // when searching for book can also by author or maybe id.
-
 
 import Foundation
 import GRDB
@@ -39,7 +34,7 @@ struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// borrowers phone number
     var phone: String
 
-    func summary() -> String{
+    func summary() -> String {
         return "ID: \(formatID(id: id)) | Name: \(name) | Email: \(email) | Phone: \(phone)"
     }
 
@@ -67,10 +62,10 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// year book was published
     var yearPublished: Int
 
-    func summary() -> String{
-        return "ID: \(formatID(id: id)) | Title: \(title) | Author: \(author) | Year Published: \(yearPublished)"
+    func summary() -> String {
+        return
+            "ID: \(formatID(id: id)) | Title: \(title) | Author: \(author) | Year Published: \(yearPublished)"
     }
-
 
     enum CodingKeys: String, CodingKey {
         case id = "bookID"
@@ -98,8 +93,9 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     /// date book was returned , nullable
     var dateReturned: String?
 
-    func summary() -> String{
-        return "ID: \(formatID(id: id)) | Book ID: \(bookID) | Borrower ID: \(borrowerID) | Date Borrowed: \(dateBorrowed) | Date Returned: \(dateReturned ?? "N/A")"
+    func summary() -> String {
+        return
+            "ID: \(formatID(id: id)) | Book ID: \(bookID) | Borrower ID: \(borrowerID) | Date Borrowed: \(dateBorrowed) | Date Returned: \(dateReturned ?? "N/A")"
     }
 
     enum CodingKeys: String, CodingKey {
@@ -119,20 +115,21 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
 }
 
 func showMenu() {
-    print("""
-    Choose an option:
-    1 - Search Book (includes current loans)
-    2 - Loan Book
-    3 - Return Book
-    4 - Add new Book
-    5 - Delete Book
-    6 - Edit Book Records
-    7 - Search Borrower (includes current loans)
-    8 - Register new Borrower
-    9 - Delete Borrower // not done yet
-    10 - Edit Borrower Records
-    0 - Exit
-    """)
+    print(
+        """
+        Choose an option:
+        1 - Search Book (includes current loans)
+        2 - Loan Book
+        3 - Return Book
+        4 - Add new Book
+        5 - Delete Book
+        6 - Edit Book Records
+        7 - Search Borrower (includes current loans)
+        8 - Register new Borrower
+        9 - Delete Borrower // not done yet
+        10 - Edit Borrower Records
+        0 - Exit
+        """)
 }
 func formatID(id: Int?) -> String {
     if let id = id {
@@ -142,7 +139,7 @@ func formatID(id: Int?) -> String {
     }
 
 }
-// got from stack overflow
+
 func currentDate() -> String {
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "dd/MM/yyyy"
@@ -217,51 +214,6 @@ func returnBook(loanID: Int, dbQueue: DatabaseQueue) {
         print("error")
     }
 }
-/*
-func availableBooks(dbQueue: DatabaseQueue) {
-    do {
-        try dbQueue.read { db in
-            let books = try Books.fetchAll(db)
-
-            for book in books {
-                let onLoan =
-                    try Loans
-                    .filter(Loans.Columns.bookID == book.id && Loans.Columns.dateReturned == nil)
-                    .fetchOne(db)
-
-                if onLoan == nil {
-                    print(book.id ?? fallbackValue)
-                }
-
-            }
-        }
-    } catch {
-        print("error")
-    }
-}
-
-func unavailableBooks(dbQueue: DatabaseQueue) {
-    do {
-        try dbQueue.read { db in
-            let books = try Books.fetchAll(db)
-
-            for book in books {
-                let onLoan =
-                    try Loans
-                    .filter(Loans.Columns.bookID == book.id && Loans.Columns.dateReturned == nil)
-                    .fetchOne(db)
-
-                if onLoan != nil {
-                    print(book.id ?? fallbackValue)
-                }
-
-            }
-        }
-    } catch {
-        print("error")
-    }
-}
-*/
 
 func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
     do {
@@ -270,7 +222,13 @@ func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
             var bookFound = false
 
             for book in books {
-                if book.title.lowercased().contains(bookSearch.lowercased()) {
+                if bookSearch == "" {
+                    print(book.summary())
+                    bookFound = true
+                }
+                if book.title.lowercased().contains(bookSearch.lowercased())
+                    || book.author.lowercased().contains(bookSearch.lowercased())
+                {
                     let onLoan =
                         try Loans
                         .filter(
@@ -295,7 +253,8 @@ func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
     }
 }
 
-func addBook(bookTitle: String, bookAuthor: String, bookYearPublished: Int, dbQueue: DatabaseQueue) {
+func addBook(bookTitle: String, bookAuthor: String, bookYearPublished: Int, dbQueue: DatabaseQueue)
+{
     do {
         try dbQueue.write { db in
             let newBook = Books(
@@ -378,7 +337,9 @@ func editBook(bookID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
-func addBorrower(borrowerName: String, borrowerEmail: String, borrowerPhone: String, dbQueue: DatabaseQueue) {
+func addBorrower(
+    borrowerName: String, borrowerEmail: String, borrowerPhone: String, dbQueue: DatabaseQueue
+) {
     do {
         try dbQueue.write { db in
             let newBorrower = Borrowers(
@@ -409,12 +370,23 @@ func searchBorrower(borrowerSearch: String, dbQueue: DatabaseQueue) {
         try dbQueue.read { db in
             let borrowers = try Borrowers.fetchAll(db)
             var borrowerFound = false
+            var loanFound = false
 
             for borrower in borrowers {
                 if borrower.name.lowercased().contains(borrowerSearch.lowercased()) {
                     print(borrower.summary())
+                    let onLoan =
+                        try Loans
+                        .filter(
+                            Loans.Columns.borrowerID == borrower.id
+                                && Loans.Columns.dateReturned == nil
+                        )
+                        .fetchOne(db)
+                        print(onLoan?.summary())
+
                     
                     borrowerFound = true
+                    
                 }
             }
             if borrowerFound == false {
@@ -496,9 +468,9 @@ struct SwiftPlayground {
                 showMenu()
                 let option = readLine()
                 switch option?.uppercased() {
-                
+
                 case "1":
-                    print("enter book name: ")
+                    print("enter book or author name: ")
                     print("or enter nothing and view all books")
                     let search = readLine() ?? ""
                     searchBook(bookSearch: search, dbQueue: dbQueue)
@@ -519,7 +491,9 @@ struct SwiftPlayground {
                     let bookAuthor = readLine() ?? ""
                     print("enter year published: ")
                     let yearPublished = Int(readLine() ?? "") ?? fallbackValue
-                    addBook(bookTitle: bookTitle, bookAuthor: bookAuthor, bookYearPublished: yearPublished, dbQueue: dbQueue)
+                    addBook(
+                        bookTitle: bookTitle, bookAuthor: bookAuthor,
+                        bookYearPublished: yearPublished, dbQueue: dbQueue)
                 case "5":
                     print("enter book id: ")
                     let bookID = Int(readLine() ?? "") ?? fallbackValue
@@ -539,7 +513,9 @@ struct SwiftPlayground {
                     let borrowerEmail = readLine() ?? ""
                     print("enter borrower phone: ")
                     let borrowerPhone = readLine() ?? ""
-                    addBorrower(borrowerName: borrowerName, borrowerEmail: borrowerEmail, borrowerPhone: borrowerPhone, dbQueue: dbQueue)
+                    addBorrower(
+                        borrowerName: borrowerName, borrowerEmail: borrowerEmail,
+                        borrowerPhone: borrowerPhone, dbQueue: dbQueue)
                 case "9":
                     print("enter borrower id: ")
                     let borrowerID = Int(readLine() ?? "") ?? fallbackValue
@@ -551,14 +527,14 @@ struct SwiftPlayground {
                 case "0":
                     running = false
                     print("goodbye")
-                    // make it so it doesn't ask for press enter to continue
+
                 default:
-                print("??")    
+                    print("??")
                 }
-                print("press enter to continue: ")
+                if running {
                 _ = readLine()
-                    
-                
+                }
+
             }
             // */
         } catch {
@@ -567,4 +543,3 @@ struct SwiftPlayground {
 
     }
 }
-
