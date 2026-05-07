@@ -18,7 +18,13 @@
 import Foundation
 import GRDB
 
+// fallback value for missing IDs
 let fallbackValue: Int = -1
+
+
+/// Represents a borrwer in the library.
+///
+/// A borrower is someone who can loan books from the library/
 struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
     static let databaseTableName = "borrowers"
     /// the borrower ID
@@ -502,7 +508,6 @@ struct SwiftPlayground {
         do {
             let dbQueue = try DatabaseQueue(path: dbpath)
             print("database connection succesful")
-            // /*
             var running = true
             while running {
                 showMenu()
@@ -542,7 +547,6 @@ struct SwiftPlayground {
                 }
 
             }
-            // */
         } catch {
             print(error)
         }
