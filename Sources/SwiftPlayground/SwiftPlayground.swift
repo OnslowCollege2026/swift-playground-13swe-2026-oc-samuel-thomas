@@ -2,7 +2,6 @@
 // https://docs.swift.org/swift-book
 
 // remember to change the test types in testing
-// remember to add documentation throughout
 // make sure things that shouldnt be null or should be unique are.
 
 import Foundation
@@ -451,7 +450,7 @@ func deleteBook(dbQueue: DatabaseQueue) {
                 // Prints summary of the book found.
                 print("Found book with \(book.summary())")
 
-                // Searches if there is an active loan associated with this book
+                // Searches if there is an active loan associated with this book.
                 let activeLoan =
                     try Loans
                     .filter(
@@ -501,15 +500,19 @@ func editBook(dbQueue: DatabaseQueue) {
                 // Prints summary of book found.
                 print("Found book with \(book.summary())")
 
-                // Asks user for new title, and if user presses nothing it changes nothing.
+                // Asks user for new book title, and if user presses nothing it changes nothing from the records.
                 print("enter new book title or press enter to keep \(book.title)")
                 if let newTitle = readLine(), newTitle != "" {
                     book.title = newTitle
                 }
+
+                // Asks user for new author name, and if user presses nothing it changes nothing from the records.
                 print("enter new book author or press enter to keep \(book.author)")
                 if let newAuthor = readLine(), newAuthor != "" {
                     book.author = newAuthor
                 }
+
+                // Asks user for new year published that is valid, and if user presses nothing it changes nothing from the records.
                 print("enter new book year published or press enter to keep \(book.yearPublished)")
                 if let newYearPublished = readLine(), newYearPublished != "" {
                     if let newYearPublished = Int(newYearPublished) {
@@ -518,10 +521,16 @@ func editBook(dbQueue: DatabaseQueue) {
                         print("invalid year entered")
                     }
                 }
+
+                // Updating records with new information.
                 try book.update(db)
+
+                // Telling user it's been updated and showing new information.
                 print("book succesfully updated")
                 print(book.summary())
             } else {
+
+                // Tells user if there is no matching book found to entered book ID.
                 print("No book with id \(bookID)")
             }
         }
@@ -538,29 +547,44 @@ func editBook(dbQueue: DatabaseQueue) {
 /// 
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func addBorrower(dbQueue: DatabaseQueue) {
+
+    // Asks user for borrower name.
     print("enter borrower name: ")
     let borrowerName = readLine() ?? ""
+
+    // Asks user for borrower email.
     print("enter borrower email: ")
     let borrowerEmail = readLine() ?? ""
+
+    // Asks user for borrower email.
     print("enter borrower phone: ")
     let borrowerPhone = readLine() ?? ""
     do {
         try dbQueue.write { db in
+
+            // Creates new borrower using entered information.
             let newBorrower = Borrowers(
                 id: nil, name: borrowerName, email: borrowerEmail, phone: borrowerPhone)
+
+            // Checks that the name is not empty.
             if newBorrower.name == "" {
                 print("please enter a borrower name")
                 return
             }
+
+            // Checks that the email is not empty.
             if newBorrower.email == "" {
                 print("please enter a borrower email")
                 return
             }
+
+            // Checks that the phone is not empty.
             if newBorrower.phone == "" {
                 print("please enter a borrower phone")
                 return
             }
 
+            // Inserts new borrower into database and tells user.
             try newBorrower.insert(db)
             print("borrower succesfully added")
         }
@@ -578,25 +602,44 @@ func addBorrower(dbQueue: DatabaseQueue) {
 /// 
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func searchBorrower(dbQueue: DatabaseQueue) {
+
+        // Ask for user input for borrower name.
         print("enter borrower name:")
         let borrowerSearch = readLine() ?? ""
     do {
         try dbQueue.read { db in
+
+            // Fetches all borrowers from database.
             let borrowers = try Borrowers.fetchAll(db)
+
+            // Tracks if any matching borrowers were found.
             var borrowerFound = false
 
+            // Loops through each borrower in database.
             for borrower in borrowers {
+
+                // Check if their is a book that matches the input by user.
                 if borrower.name.lowercased().contains(borrowerSearch.lowercased()) {
+
+                    // Prints information about borrower(s) found.
                     print(borrower.summary())
+
+                    // Checking if borrower has any acgive loans by searching with a loan with the same id and where the date returned is still  nil.
                     let onLoan =
                         try Loans
                         .filter(
                             Loans.Columns.borrowerID == borrower.id
                                 && Loans.Columns.dateReturned == nil
                         )
+
+                        // Fetches all loans that this applies to.
                         .fetchAll(db)
+
+                        // If there are no loans that apply, prints that the borrower has no current loans
                         if onLoan.isEmpty {
                             print("current loans: none")
+
+                            // If there are loans that apply, print all current loans by borrower.
                         } else {
                             print("current loans: ")
                             for loan in onLoan {
@@ -606,11 +649,13 @@ func searchBorrower(dbQueue: DatabaseQueue) {
                             }
                         }
 
-                    
+                    // Matching borrower found.
                     borrowerFound = true
                     
                 }
             }
+
+            // Displays message if no borrower is found.
             if borrowerFound == false {
                 print("no borrower found")
             }
@@ -629,28 +674,46 @@ func searchBorrower(dbQueue: DatabaseQueue) {
 /// 
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func editBorrower(dbQueue: DatabaseQueue) {
+
+    // Asks user for borrower ID.
     print("enter borrower id: ")
     let borrowerID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
+
+            // Attempts to fetch borrower with inputed borrower ID.
             if var borrower = try Borrowers.fetchOne(db, key: borrowerID) {
+
+                // Prints summary of borrower found.
                 print("Found borrower with \(borrower.summary())")
+
+                // Asks user for new borrower name, and if user presses nothing it changes nothing from the records.
                 print("enter new borrower name or press enter to keep \(borrower.name)")
                 if let newName = readLine(), newName != "" {
                     borrower.name = newName
                 }
+
+                // Asks user for new borrower email, and if user presses nothing it changes nothing from the records.
                 print("enter new borrower email or press enter to keep \(borrower.email)")
                 if let newEmail = readLine(), newEmail != "" {
                     borrower.email = newEmail
                 }
+
+                // Asks user for new borrower phone, and if user presses nothing it changes nothing from the records.
                 print("enter new borrower phone number or press enter to keep \(borrower.phone)")
                 if let newPhone = readLine(), newPhone != "" {
                     borrower.phone = newPhone
                 }
+
+                // Updating records with new information.
                 try borrower.update(db)
+
+                // Telling user it's been updated and showing new information.
                 print("borrower succesfully updated")
                 print(borrower.summary())
             } else {
+
+                // Tells user if there is no matching book found to entered book ID.
                 print("No borrower with id \(borrowerID)")
             }
         }
@@ -669,12 +732,20 @@ func editBorrower(dbQueue: DatabaseQueue) {
 /// 
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func deleteBorrower(dbQueue: DatabaseQueue) {
+
+    // Asks user for borrower ID.
     print("enter borrower id: ")
     let borrowerID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
+
+             // Attempts to fetch borrower with inputed borrower ID.
             if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
+
+                // Prints summary of the borrower found.
                 print("Found borrower with \(borrower.summary())")
+
+                // Searches if there is an active loan associated with this borrower.
                 let activeLoan =
                     try Loans
                     .filter(
@@ -682,14 +753,19 @@ func deleteBorrower(dbQueue: DatabaseQueue) {
                     )
                     .fetchOne(db)
 
+                // Doesn't delete borrower if it on loan.
                 if activeLoan != nil {
                     print("can't delete borrower as borrower has books loaned")
                     return
                 }
+
+                // Deletes borrower if there is no current loan associated and tells user.
                 try borrower.delete(db)
                 print("borrower succesfuly deleted")
             } else {
-                print("No borrower with id \(borrowerID)")
+
+                // Tells user if there is no matching borrower found to entered borrower ID.
+                print("No borrower with found id \(borrowerID)")
             }
         }
     } catch {
@@ -697,45 +773,85 @@ func deleteBorrower(dbQueue: DatabaseQueue) {
     }
 }
 
+
 @main
 struct SwiftPlayground {
     static func main() {
         let dbpath = "Sources/SwiftPlayground/bookDatabase.db"
         do {
+
+            // Created database queue for access to database.
             let dbQueue = try DatabaseQueue(path: dbpath)
+
+            // Confirms that database connection is succeful to user.
             print("database connection succesful")
+
+            // Controls wether the program runs.
             var running = true
+
+            // So program loops.
             while running {
+
+                // Displays menu options to user.
                 showMenu()
+
+                // Reads user choice.
                 let option = readLine()
+
+                // Runs selected function.
                 switch option?.uppercased() {
                 case "1":
+
+                    // Searches for books.
                     searchBook(dbQueue: dbQueue)
                 case "2":
+
+                    // Loans books to borrower.
                     loanBook(dbQueue: dbQueue)
                 case "3":
+
+                    // Returns a borrowed book.
                     returnBook(dbQueue: dbQueue)
                 case "4":
+
+                    // Adds a new book.
                     addBook(dbQueue: dbQueue)
                 case "5":
+
+                    // Deletes a book.
                     deleteBook(dbQueue: dbQueue)
                 case "6":
+
+                    // Edits book information.
                     editBook(dbQueue: dbQueue)
                 case "7":
+
+                    // Searches for borrowers.
                     searchBorrower(dbQueue: dbQueue)
                 case "8":
+
+                    // Adds a borrower.
                     addBorrower(dbQueue: dbQueue)
                 case "9":
+
+                    // Delete a borrower.
                     deleteBorrower(dbQueue: dbQueue)
                 case "10":
+
+                    // Edits borrower information.
                     editBorrower(dbQueue: dbQueue)
                 case "0":
+
+                    // Ends program.
                     running = false
                     print("goodbye")
 
+                // Handles invalid menu input.
                 default:
                     print("please enter a valid input")
                 }
+
+                // Pauses program until user enters to continue.
                 if running {
                     print("press enter to continue")
                     _ = readLine()
