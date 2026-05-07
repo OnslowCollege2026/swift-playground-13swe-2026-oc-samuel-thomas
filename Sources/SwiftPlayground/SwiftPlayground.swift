@@ -199,38 +199,45 @@ func currentDate() -> String {
 /// 
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func loanBook(dbQueue: DatabaseQueue) {
+
+    // Ask for book ID.
     print("enter book ID: ")
     let bookID = Int(readLine() ?? "") ?? fallbackValue
 
+    // Ask for borrower ID.
     print("enter borrower ID: ")
     let borrowerID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
             print("")
-            // find borrower with id
+            // Fetches borrower using inputed borrower ID, and prints out a summary of borrower information if it finds it, and if not prints that it can't be found.
             if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
                 print("Found borrower: \(borrower.summary())")
             } else {
                 print("No borrower found with id \(borrowerID)")
                 return
             }
-            // find book with id
+            // Fetches book using inputed book, and prints out a summary of book information if it finds it, and if not prints that it can't be found.
             if let book = try Books.fetchOne(db, key: bookID) {
                 print("Found book: \(book.summary()) ")
             } else {
                 print("No book found with id \(bookID)")
                 return
             }
+
+            // Checking if book has an active loan by searching with a loan with the same id and where the date returned is still  nil.
             let alreadyLoaned =
                 try Loans
                 .filter(Loans.Columns.bookID == bookID && Loans.Columns.dateReturned == nil)
                 .fetchOne(db)
 
+            // If active loan exists, let the user know and stop function.
             if alreadyLoaned != nil {
                 print("book already loaned")
                 return
             }
 
+            // Creates a new loan using entered borrower and book ID and current date.
             let newLoan = Loans(
                 id: nil,
                 bookID: bookID,
@@ -256,30 +263,46 @@ func loanBook(dbQueue: DatabaseQueue) {
 /// 
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func returnBook(dbQueue: DatabaseQueue) {
+
+        // Ask user for book id to return.
         print("enter book id to return: ")
         let bookID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
+
+            // Checking if book has an active loan by searching with a loan with the same id and where the date returned is still  nil.
             if var loan = try Loans
                 .filter(
                     Loans.Columns.bookID == bookID && Loans.Columns.dateReturned == nil
                     )
                 .fetchOne(db){
+
+                // Fetches borrower connected to loan.
                 let borrower = try Borrowers.fetchOne(db, key: loan.borrowerID)
+
+                // Fetches book connected to loan.
                 let book = try Books.fetchOne(db, key: loan.bookID)
+
+                // Displays information about loan.
                 print(
-                    "Found loan: ID: \(formatID(id: loan.id)) | Book ID: \(formatID(id: book?.id)) | Book Title: \(book?.title ?? "Unknown") | Borrower ID: \(formatID(id: borrower?.id)) | Borrower Name: \(borrower?.name ?? "Unknown") | Date Borrowed: \(loan.dateBorrowed) | Date Returned: \(loan.dateReturned ?? "N/A")"
+                    "Found loan: ID: \(formatID(id: loan.id)) | Book ID: \(formatID(id: book?.id)) | Book Title: \(book?.title ?? "N/A") | Borrower ID: \(formatID(id: borrower?.id)) | Borrower Name: \(borrower?.name ?? "N/A") | Date Borrowed: \(loan.dateBorrowed) | Date Returned: \(loan.dateReturned ?? "N/A")"
                 )
+
+                // Checks if book has already been loaned.
                 if loan.dateReturned != nil {
                     print("book already returned")
                     return
                 }
+
+                // Updates loan date returned with current date.
                 loan.dateReturned = currentDate()
                 try loan.update(db)
 
                 print("book returned")
 
             } else {
+                
+                // Displays error message if there is no active loan with entered book ID.
                 print("No current loan found with book id \(bookID)")
                 return
             }
@@ -298,21 +321,35 @@ func returnBook(dbQueue: DatabaseQueue) {
 /// 
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func searchBook(dbQueue: DatabaseQueue) {
+
+    // Ask for user input for book or author name, and if the user enters nothing, it prints all books.
     print("enter book or author name ")
     print("or enter nothing and view all books:  ")
     let bookSearch = readLine() ?? ""
     do {
         try dbQueue.read { db in
+
+            // Fetches all books from database.    
             let books = try Books.fetchAll(db)
+
+            // Tracks if any matching books were found.
             var bookFound = false
+
+            // Loops through each book in database.
             for book in books {
+
+                // If user enters nothing prints all books with their information.
                 if bookSearch == "" {
                     print(book.summary())
                     bookFound = true
                 }
+
+                // Check if their is a book that matches the input by user.
                 if book.title.lowercased().contains(bookSearch.lowercased())
                     || book.author.lowercased().contains(bookSearch.lowercased())
                 {
+                    
+                    // Checking if book has an active loan by searching with a loan with the same id and where the date returned is still  nil.
                     let onLoan =
                         try Loans
                         .filter(
@@ -320,13 +357,20 @@ func searchBook(dbQueue: DatabaseQueue) {
                         )
                         .fetchOne(db)
 
+                    // Displays books as available if not on loan.
                     if onLoan == nil {
                         print("\(book.summary()) | Status: Available")
+
+                    // Displays books as unavailable if on loan.
                     } else {
                         print("\(book.summary()) | Status: Unavailable")
                     }
+
+                    // Matching book found.
                     bookFound = true
                 }
+            
+            // Displays message if no book is found.
             }
             if bookFound == false {
                 print("no book found")
@@ -345,26 +389,38 @@ func searchBook(dbQueue: DatabaseQueue) {
 /// 
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func addBook(dbQueue: DatabaseQueue) {
-    print("enter book name: ")
+
+    // Asks user for book title.
+    print("enter book title: ")
     let bookTitle = readLine() ?? ""
+
+    // Asks for book author.
     print("enter author name: ")
     let bookAuthor = readLine() ?? ""
+
+    // Asks for book year published.
     print("enter year published: ")
     let bookYearPublished = Int(readLine() ?? "") ?? fallbackValue
-                    
     do {
         try dbQueue.write { db in
+
+            // Creates new book using entered information.
             let newBook = Books(
                 id: nil, title: bookTitle, author: bookAuthor, yearPublished: bookYearPublished)
+
+            // Checks that the title is not empty.
             if newBook.title == "" {
                 print("please enter a book title")
                 return
             }
+
+            // Checks that the author is not empty.
             if newBook.author == "" {
                 print("please enter a book author")
                 return
             }
 
+            // Inserts new book into database and tells user.
             try newBook.insert(db)
             print("book succesfully added")
         }
@@ -382,12 +438,20 @@ func addBook(dbQueue: DatabaseQueue) {
 /// 
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func deleteBook(dbQueue: DatabaseQueue) {
+
+    // Asks user for book ID.
     print("enter book id: ")
     let bookID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
+
+            // Attempts to fetch book with inputed book ID.
             if let book = try Books.fetchOne(db, key: bookID) {
+
+                // Prints summary of the book found.
                 print("Found book with \(book.summary())")
+
+                // Searches if there is an active loan associated with this book
                 let activeLoan =
                     try Loans
                     .filter(
@@ -395,16 +459,20 @@ func deleteBook(dbQueue: DatabaseQueue) {
                     )
                     .fetchOne(db)
 
+                // Doesn't delete book if it on loan.
                 if activeLoan != nil {
                     print("can't delete book as book is currently on loan")
                     return
                 }
+
+                // Deletes book if there is no current loan associated and tells user.
                 try book.delete(db)
                 print("book succesfuly deleted")
             } else {
+
+                // Tells user if there is no matching book found to entered book ID.
                 print("No book found with id \(bookID)")
             }
-
         }
     } catch {
         print("error")
@@ -420,12 +488,20 @@ func deleteBook(dbQueue: DatabaseQueue) {
 /// 
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func editBook(dbQueue: DatabaseQueue) {
+
+    // Asks user for book ID.
     print("enter book id: ")
     let bookID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
+
+            // Attempts to fetch book with inputed book ID.
             if var book = try Books.fetchOne(db, key: bookID) {
+
+                // Prints summary of book found.
                 print("Found book with \(book.summary())")
+
+                // Asks user for new title, and if user presses nothing it changes nothing.
                 print("enter new book title or press enter to keep \(book.title)")
                 if let newTitle = readLine(), newTitle != "" {
                     book.title = newTitle
@@ -658,7 +734,7 @@ struct SwiftPlayground {
                     print("goodbye")
 
                 default:
-                    print("??")
+                    print("please enter a valid input")
                 }
                 if running {
                     print("press enter to continue")
