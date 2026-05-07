@@ -1,51 +1,53 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-
-
-
-
 // remember to change the test types in testing
 // remember to add documentation throughout
 // make sure things that shouldnt be null or should be unique are.
 
-
-
-
-
-
-
 import Foundation
 import GRDB
 
-// fallback value for missing IDs
+// Fallback value for missing IDs.
 let fallbackValue: Int = -1
-
 
 /// Represents a borrwer in the library.
 ///
-/// A borrower is someone who can loan books from the library/
+/// A borrower is someone who can loan books from the library.
+/// Each borrower has id and contact information stored in the database.
 struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
+
+    /// Name of the table in the database that stores borrower information.
     static let databaseTableName = "borrowers"
-    /// the borrower ID
+
+    /// The borrower ID.
     let id: Int?
-    /// borrowers name
+
+    /// Borrowers name.
     var name: String
-    /// borrowers email
+
+    /// Borrowers email.
     var email: String
-    /// borrowers phone number
+
+    /// Borrowers phone number.
     var phone: String
 
+    /// Returns a summary of borrower information.
+    /// 
+    /// - Returns: A string containing a summary of borrower information including Id, Name, Email, and Phone.
     func summary() -> String {
         return "ID: \(formatID(id: id)) | Name: \(name) | Email: \(email) | Phone: \(phone)"
     }
 
+    /// Keys used for coding to and from the database.
     enum CodingKeys: String, CodingKey {
         case id = "borrowerID"
         case name
         case email
         case phone
     }
+
+    /// Column names used for connecting with the database.
     enum Columns {
         static let id = Column("borrowerID")
         static let name = Column("name")
@@ -53,28 +55,45 @@ struct Borrowers: Identifiable, Codable, FetchableRecord, PersistableRecord {
         static let phone = Column("phone")
     }
 }
+
+/// Represents a book in the library.
+///
+/// A book is something that can be loaned by a borrower. 
+/// Each book has an id and information stored in the database.
 struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
+
+    /// Name of the table in the database that stores book information.
     static let databaseTableName = "books"
-    /// the book ID
+
+    /// The book ID.
     let id: Int?
-    /// book title
+
+    /// The book title.
     var title: String
-    /// book author
+
+    /// The book author.
     var author: String
-    /// year book was published
+
+    /// The year the book was published.
     var yearPublished: Int
 
+    /// Returns a summary of book information.
+    /// 
+    /// - Returns: A string containing a summary of book information including Id, Title, Author, and Year Published.
     func summary() -> String {
         return
             "ID: \(formatID(id: id)) | Title: \(title) | Author: \(author) | Year Published: \(yearPublished)"
     }
 
+    /// Keys used for coding to and from the database.
     enum CodingKeys: String, CodingKey {
         case id = "bookID"
         case title
         case author
         case yearPublished
     }
+
+    /// Column names used for connecting with the database.
     enum Columns {
         static let id = Column("bookID")
         static let title = Column("title")
@@ -82,24 +101,32 @@ struct Books: Identifiable, Codable, FetchableRecord, PersistableRecord {
         static let yearPublished = Column("yearPublished")
     }
 }
+
+/// Represents a loan in the library.
+///
+/// A loan links a borrower to a book for some time.
+/// Each loan has an id and information stored in the database.
 struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
+
+    /// Name of the table in the database that stores loan information.
     static let databaseTableName = "loans"
-    /// the loan id
+
+    /// The loan id.
     let id: Int?
-    /// the book id
+
+    /// The book id.
     var bookID: Int
-    /// the borrower id
+
+    /// The borrower id.
     var borrowerID: Int
-    /// date book was borrowed
+
+    /// The date the book was borrowed.
     var dateBorrowed: String
-    /// date book was returned , nullable
+
+    /// The date the book was returned , nullable.
     var dateReturned: String?
 
-    func summary() -> String {
-        return
-            "ID: \(formatID(id: id)) | Book ID: \(bookID) | Borrower ID: \(borrowerID) | Date Borrowed: \(dateBorrowed) | Date Returned: \(dateReturned ?? "N/A")"
-    }
-
+    /// Keys used for coding to and from the database.
     enum CodingKeys: String, CodingKey {
         case id = "loanID"
         case bookID
@@ -107,6 +134,8 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
         case dateBorrowed
         case dateReturned
     }
+
+    /// Column names used for connecting with the database.
     enum Columns {
         static let id = Column("loanID")
         static let bookID = Column("bookID")
@@ -116,6 +145,9 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     }
 }
 
+/// Displays the menu options.
+/// 
+/// This function prints all options the user can choice to do.
 func showMenu() {
     print(
         """
@@ -133,21 +165,39 @@ func showMenu() {
         0 - Exit
         """)
 }
+
+/// converts an optional integer id  into a string.
+/// 
+/// If the id is nil, returns "N/A". If not it prints id as a string.
+/// 
+/// - Parameter:
+///     - id: the optional integer.
+/// - Returns: A string for id or "N/A".
 func formatID(id: Int?) -> String {
     if let id = id {
         return "\(id)"
     } else {
         return "N/A"
     }
-
 }
 
+/// Returns the current date as a string formatted in dd/MM/yyyy.
+/// 
+/// - Returns: A string with the current data.
 func currentDate() -> String {
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "dd/MM/yyyy"
     return dateFormatter.string(from: Date())
 }
 
+/// Loans a book to a borrower if both exist and book is not already on loan.
+/// 
+/// Prompts for book and borrower Id.
+/// Checks if both exist.
+/// Makes sure book is not already loaned out.
+/// Creates and inserts a new loan record with current date to database.
+/// 
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func loanBook(dbQueue: DatabaseQueue) {
     print("enter book ID: ")
     let bookID = Int(readLine() ?? "") ?? fallbackValue
@@ -197,6 +247,14 @@ func loanBook(dbQueue: DatabaseQueue) {
     }
 }
 
+/// Returns a book borrowed by a borrower by changing loan information.
+/// 
+/// Prompts for book ID.
+/// Finds active loan for that book.
+/// Displays loan details.
+/// Edits loan by setting return date to current date.
+/// 
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func returnBook(dbQueue: DatabaseQueue) {
         print("enter book id to return: ")
         let bookID = Int(readLine() ?? "") ?? fallbackValue
@@ -231,6 +289,14 @@ func returnBook(dbQueue: DatabaseQueue) {
     }
 }
 
+/// Searches for book by title or author, or displays all books.
+/// 
+/// Prompts for a search.
+/// Matches book by title or author.
+/// If no input given, displays all books in library.
+/// Shows book information and wether or not it is on loan.
+/// 
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func searchBook(dbQueue: DatabaseQueue) {
     print("enter book or author name ")
     print("or enter nothing and view all books:  ")
@@ -271,6 +337,13 @@ func searchBook(dbQueue: DatabaseQueue) {
     }
 }
 
+/// Adds a new book to database.
+/// 
+/// Prompts for book title, author, and year published.
+/// Makes sure required fields are not empty
+/// Creates and inserts a new book record to database.
+/// 
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func addBook(dbQueue: DatabaseQueue) {
     print("enter book name: ")
     let bookTitle = readLine() ?? ""
@@ -300,6 +373,14 @@ func addBook(dbQueue: DatabaseQueue) {
     }
 }
 
+/// Deletes a book from database that is currently not on loan.
+/// 
+/// Prompts for book id.
+/// Checks if book exist.
+/// Makes sure book is not already loaned out.
+/// Deletes book record from database.
+/// 
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func deleteBook(dbQueue: DatabaseQueue) {
     print("enter book id: ")
     let bookID = Int(readLine() ?? "") ?? fallbackValue
@@ -330,6 +411,14 @@ func deleteBook(dbQueue: DatabaseQueue) {
     }
 }
 
+/// Edits an existing book record in database.
+/// 
+/// Prompts for book Id.
+/// Checks if book exists.
+/// Allows user to update title, author, or year published.
+/// Changes nothing to field that user does not enter a value into.
+/// 
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func editBook(dbQueue: DatabaseQueue) {
     print("enter book id: ")
     let bookID = Int(readLine() ?? "") ?? fallbackValue
@@ -365,6 +454,13 @@ func editBook(dbQueue: DatabaseQueue) {
     }
 }
 
+/// Adds a new borrower to database.
+/// 
+/// Prompts for borrower name, email, and phone.
+/// Makes sure required fields are not empty.
+/// Creates and inserts a new borrower record to database.
+/// 
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func addBorrower(dbQueue: DatabaseQueue) {
     print("enter borrower name: ")
     let borrowerName = readLine() ?? ""
@@ -397,6 +493,14 @@ func addBorrower(dbQueue: DatabaseQueue) {
     }
 }
 
+/// Searches for book by name and displays their current loans.
+/// 
+/// Prompts for a search.
+/// Matches borrower(s) by name.
+/// Shows borrower information.
+/// Prints all active loans for borrower(s).
+/// 
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func searchBorrower(dbQueue: DatabaseQueue) {
         print("enter borrower name:")
         let borrowerSearch = readLine() ?? ""
@@ -440,6 +544,14 @@ func searchBorrower(dbQueue: DatabaseQueue) {
     }
 }
 
+/// Edits an existing borrower record in database.
+/// 
+/// Prompts for borrower Id.
+/// Checks if borrower exists.
+/// Allows user to update name, email, or phone.
+/// Changes nothing to field that user does not enter a value into.
+/// 
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func editBorrower(dbQueue: DatabaseQueue) {
     print("enter borrower id: ")
     let borrowerID = Int(readLine() ?? "") ?? fallbackValue
@@ -472,6 +584,14 @@ func editBorrower(dbQueue: DatabaseQueue) {
     }
 }
 
+/// Deletes a borrower from database that is currently has no loans.
+/// 
+/// Prompts for borrower id.
+/// Checks if borrower exists.
+/// Makes sure borrower has no active loans
+/// Deletes borrower record from database.
+/// 
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func deleteBorrower(dbQueue: DatabaseQueue) {
     print("enter borrower id: ")
     let borrowerID = Int(readLine() ?? "") ?? fallbackValue
@@ -513,7 +633,6 @@ struct SwiftPlayground {
                 showMenu()
                 let option = readLine()
                 switch option?.uppercased() {
-
                 case "1":
                     searchBook(dbQueue: dbQueue)
                 case "2":
