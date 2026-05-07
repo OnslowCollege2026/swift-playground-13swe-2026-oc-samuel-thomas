@@ -1,23 +1,19 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-// show borrower loans
-// include amount of books
-// screen clears after user presses enter
-// make it so to loan a book id isnt necessary
+
+
+
+
 // remember to change the test types in testing
-// maybe add a required amount of numbers for the phone number
-// think about adding a unique factor to the email and phone, possibly not though as kids may use parents phone or email, maybe just make email unique and phone not unique?
-// for search borrower be able to search by name email or phone or id similar thing with search book
 // remember to add documentation throughout
-// possible change things to read line
 // make sure things that shouldnt be null or should be unique are.
-// fix all the silly stuff in the cases
-// maybe put the books' current loans when searched?
-// gotta sort out all the question marks
-// maybe for all the return/loan/edit books it also searches? and also for borrowers stuff
-// change it so enter to continue and clear
-// when searching for book can also by author or maybe id.
+
+
+
+
+
+
 
 import Foundation
 import GRDB
@@ -118,15 +114,15 @@ func showMenu() {
     print(
         """
         Choose an option:
-        1 - Search Book (includes current loans)
+        1 - Search Book
         2 - Loan Book
         3 - Return Book
         4 - Add new Book
         5 - Delete Book
         6 - Edit Book Records
-        7 - Search Borrower (includes current loans)
+        7 - Search Borrower
         8 - Register new Borrower
-        9 - Delete Borrower // not done yet
+        9 - Delete Borrower
         10 - Edit Borrower Records
         0 - Exit
         """)
@@ -146,21 +142,27 @@ func currentDate() -> String {
     return dateFormatter.string(from: Date())
 }
 
-func loanBook(bookID: Int, borrowerID: Int, dbQueue: DatabaseQueue) {
+func loanBook(dbQueue: DatabaseQueue) {
+    print("enter book ID: ")
+    let bookID = Int(readLine() ?? "") ?? fallbackValue
+
+    print("enter borrower ID: ")
+    let borrowerID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
+            print("")
             // find borrower with id
             if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
-                print("Found borrower with \(borrower.summary())")
+                print("Found borrower: \(borrower.summary())")
             } else {
                 print("No borrower found with id \(borrowerID)")
                 return
             }
             // find book with id
             if let book = try Books.fetchOne(db, key: bookID) {
-                print("Found book with ID \(book.id ?? fallbackValue): \(book.title)")
+                print("Found book: \(book.summary()) ")
             } else {
-                print("No book with id \(bookID)")
+                print("No book found with id \(bookID)")
                 return
             }
             let alreadyLoaned =
@@ -189,12 +191,20 @@ func loanBook(bookID: Int, borrowerID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
-func returnBook(loanID: Int, dbQueue: DatabaseQueue) {
+func returnBook(dbQueue: DatabaseQueue) {
+        print("enter book id to return: ")
+        let bookID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
-            if var loan = try Loans.fetchOne(db, key: loanID) {
+            if var loan = try Loans
+                .filter(
+                    Loans.Columns.bookID == bookID && Loans.Columns.dateReturned == nil
+                    )
+                .fetchOne(db){
+                let borrower = try Borrowers.fetchOne(db, key: loan.borrowerID)
+                let book = try Books.fetchOne(db, key: loan.bookID)
                 print(
-                    "Found loan with \(loan.summary())"
+                    "Found loan: ID: \(formatID(id: loan.id)) | Book ID: \(formatID(id: book?.id)) | Book Title: \(book?.title ?? "Unknown") | Borrower ID: \(formatID(id: borrower?.id)) | Borrower Name: \(borrower?.name ?? "Unknown") | Date Borrowed: \(loan.dateBorrowed) | Date Returned: \(loan.dateReturned ?? "N/A")"
                 )
                 if loan.dateReturned != nil {
                     print("book already returned")
@@ -206,7 +216,7 @@ func returnBook(loanID: Int, dbQueue: DatabaseQueue) {
                 print("book returned")
 
             } else {
-                print("No loan found with id \(loanID)")
+                print("No current loan found with book id \(bookID)")
                 return
             }
         }
@@ -215,12 +225,14 @@ func returnBook(loanID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
-func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
+func searchBook(dbQueue: DatabaseQueue) {
+    print("enter book or author name ")
+    print("or enter nothing and view all books:  ")
+    let bookSearch = readLine() ?? ""
     do {
         try dbQueue.read { db in
             let books = try Books.fetchAll(db)
             var bookFound = false
-
             for book in books {
                 if bookSearch == "" {
                     print(book.summary())
@@ -253,8 +265,14 @@ func searchBook(bookSearch: String, dbQueue: DatabaseQueue) {
     }
 }
 
-func addBook(bookTitle: String, bookAuthor: String, bookYearPublished: Int, dbQueue: DatabaseQueue)
-{
+func addBook(dbQueue: DatabaseQueue) {
+    print("enter book name: ")
+    let bookTitle = readLine() ?? ""
+    print("enter author name: ")
+    let bookAuthor = readLine() ?? ""
+    print("enter year published: ")
+    let bookYearPublished = Int(readLine() ?? "") ?? fallbackValue
+                    
     do {
         try dbQueue.write { db in
             let newBook = Books(
@@ -276,7 +294,9 @@ func addBook(bookTitle: String, bookAuthor: String, bookYearPublished: Int, dbQu
     }
 }
 
-func deleteBook(bookID: Int, dbQueue: DatabaseQueue) {
+func deleteBook(dbQueue: DatabaseQueue) {
+    print("enter book id: ")
+    let bookID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
             if let book = try Books.fetchOne(db, key: bookID) {
@@ -304,7 +324,9 @@ func deleteBook(bookID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
-func editBook(bookID: Int, dbQueue: DatabaseQueue) {
+func editBook(dbQueue: DatabaseQueue) {
+    print("enter book id: ")
+    let bookID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
             if var book = try Books.fetchOne(db, key: bookID) {
@@ -337,9 +359,13 @@ func editBook(bookID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
-func addBorrower(
-    borrowerName: String, borrowerEmail: String, borrowerPhone: String, dbQueue: DatabaseQueue
-) {
+func addBorrower(dbQueue: DatabaseQueue) {
+    print("enter borrower name: ")
+    let borrowerName = readLine() ?? ""
+    print("enter borrower email: ")
+    let borrowerEmail = readLine() ?? ""
+    print("enter borrower phone: ")
+    let borrowerPhone = readLine() ?? ""
     do {
         try dbQueue.write { db in
             let newBorrower = Borrowers(
@@ -365,12 +391,13 @@ func addBorrower(
     }
 }
 
-func searchBorrower(borrowerSearch: String, dbQueue: DatabaseQueue) {
+func searchBorrower(dbQueue: DatabaseQueue) {
+        print("enter borrower name:")
+        let borrowerSearch = readLine() ?? ""
     do {
         try dbQueue.read { db in
             let borrowers = try Borrowers.fetchAll(db)
             var borrowerFound = false
-            var loanFound = false
 
             for borrower in borrowers {
                 if borrower.name.lowercased().contains(borrowerSearch.lowercased()) {
@@ -381,8 +408,17 @@ func searchBorrower(borrowerSearch: String, dbQueue: DatabaseQueue) {
                             Loans.Columns.borrowerID == borrower.id
                                 && Loans.Columns.dateReturned == nil
                         )
-                        .fetchOne(db)
-                        print(onLoan?.summary())
+                        .fetchAll(db)
+                        if onLoan.isEmpty {
+                            print("current loans: none")
+                        } else {
+                            print("current loans: ")
+                            for loan in onLoan {
+                                if let book = try Books.fetchOne(db, key: loan.bookID) {
+                                    print(book.summary())
+                                }
+                            }
+                        }
 
                     
                     borrowerFound = true
@@ -398,7 +434,9 @@ func searchBorrower(borrowerSearch: String, dbQueue: DatabaseQueue) {
     }
 }
 
-func editBorrower(borrowerID: Int, dbQueue: DatabaseQueue) {
+func editBorrower(dbQueue: DatabaseQueue) {
+    print("enter borrower id: ")
+    let borrowerID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
             if var borrower = try Borrowers.fetchOne(db, key: borrowerID) {
@@ -428,7 +466,9 @@ func editBorrower(borrowerID: Int, dbQueue: DatabaseQueue) {
     }
 }
 
-func deleteBorrower(borrowerID: Int, dbQueue: DatabaseQueue) {
+func deleteBorrower(dbQueue: DatabaseQueue) {
+    print("enter borrower id: ")
+    let borrowerID = Int(readLine() ?? "") ?? fallbackValue
     do {
         try dbQueue.write { db in
             if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
@@ -470,60 +510,25 @@ struct SwiftPlayground {
                 switch option?.uppercased() {
 
                 case "1":
-                    print("enter book or author name: ")
-                    print("or enter nothing and view all books")
-                    let search = readLine() ?? ""
-                    searchBook(bookSearch: search, dbQueue: dbQueue)
+                    searchBook(dbQueue: dbQueue)
                 case "2":
-                    print("enter book id: ")
-                    let bookID = Int(readLine() ?? "") ?? fallbackValue
-                    print("enter borrower id: ")
-                    let borrowerID = Int(readLine() ?? "") ?? fallbackValue
-                    loanBook(bookID: bookID, borrowerID: borrowerID, dbQueue: dbQueue)
+                    loanBook(dbQueue: dbQueue)
                 case "3":
-                    print("enter loan id: ")
-                    let loanID = Int(readLine() ?? "") ?? fallbackValue
-                    returnBook(loanID: loanID, dbQueue: dbQueue)
+                    returnBook(dbQueue: dbQueue)
                 case "4":
-                    print("enter book name: ")
-                    let bookTitle = readLine() ?? ""
-                    print("enter author name: ")
-                    let bookAuthor = readLine() ?? ""
-                    print("enter year published: ")
-                    let yearPublished = Int(readLine() ?? "") ?? fallbackValue
-                    addBook(
-                        bookTitle: bookTitle, bookAuthor: bookAuthor,
-                        bookYearPublished: yearPublished, dbQueue: dbQueue)
+                    addBook(dbQueue: dbQueue)
                 case "5":
-                    print("enter book id: ")
-                    let bookID = Int(readLine() ?? "") ?? fallbackValue
-                    deleteBook(bookID: bookID, dbQueue: dbQueue)
+                    deleteBook(dbQueue: dbQueue)
                 case "6":
-                    print("enter book id: ")
-                    let bookID = Int(readLine() ?? "") ?? fallbackValue
-                    editBook(bookID: bookID, dbQueue: dbQueue)
+                    editBook(dbQueue: dbQueue)
                 case "7":
-                    print("enter borrower name: a lot to do here still ")
-                    let borrowerName = readLine() ?? ""
-                    searchBorrower(borrowerSearch: borrowerName, dbQueue: dbQueue)
+                    searchBorrower(dbQueue: dbQueue)
                 case "8":
-                    print("enter borrower name: ")
-                    let borrowerName = readLine() ?? ""
-                    print("enter borrower email: ")
-                    let borrowerEmail = readLine() ?? ""
-                    print("enter borrower phone: ")
-                    let borrowerPhone = readLine() ?? ""
-                    addBorrower(
-                        borrowerName: borrowerName, borrowerEmail: borrowerEmail,
-                        borrowerPhone: borrowerPhone, dbQueue: dbQueue)
+                    addBorrower(dbQueue: dbQueue)
                 case "9":
-                    print("enter borrower id: ")
-                    let borrowerID = Int(readLine() ?? "") ?? fallbackValue
-                    deleteBorrower(borrowerID: borrowerID, dbQueue: dbQueue)
+                    deleteBorrower(dbQueue: dbQueue)
                 case "10":
-                    print("enter borrower id: ")
-                    let borrowerID = Int(readLine() ?? "") ?? fallbackValue
-                    editBorrower(borrowerID: borrowerID, dbQueue: dbQueue)
+                    editBorrower(dbQueue: dbQueue)
                 case "0":
                     running = false
                     print("goodbye")
@@ -532,7 +537,8 @@ struct SwiftPlayground {
                     print("??")
                 }
                 if running {
-                _ = readLine()
+                    print("press enter to continue")
+                    _ = readLine()
                 }
 
             }
