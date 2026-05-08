@@ -1,9 +1,6 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-// remember to change the test types in testing
-// make sure things that shouldnt be null or should be unique are.
-
 import Foundation
 import GRDB
 
@@ -213,14 +210,14 @@ func loanBook(dbQueue: DatabaseQueue) {
             if let borrower = try Borrowers.fetchOne(db, key: borrowerID) {
                 print("Found borrower: \(borrower.summary())")
             } else {
-                print("No borrower found with id \(borrowerID)")
+                print("No borrower found")
                 return
             }
             // Fetches book using inputed book, and prints out a summary of book information if it finds it, and if not prints that it can't be found.
             if let book = try Books.fetchOne(db, key: bookID) {
                 print("Found book: \(book.summary()) ")
             } else {
-                print("No book found with id \(bookID)")
+                print("No book found)")
                 return
             }
 
@@ -284,7 +281,7 @@ func returnBook(dbQueue: DatabaseQueue) {
 
                 // Displays information about loan.
                 print(
-                    "Found loan: ID: \(formatID(id: loan.id)) | Book ID: \(formatID(id: book?.id)) | Book Title: \(book?.title ?? "N/A") | Borrower ID: \(formatID(id: borrower?.id)) | Borrower Name: \(borrower?.name ?? "N/A") | Date Borrowed: \(loan.dateBorrowed) | Date Returned: \(loan.dateReturned ?? "N/A")"
+                    "Found loan: ID: \(formatID(id: loan.id)) | Book ID: \(formatID(id: book?.id)) | Book Title: \(book?.title ?? "N/A") | Borrower ID: \(formatID(id: borrower?.id)) | Borrower Name: \(borrower?.name ?? "N/A") | Date Borrowed: \(loan.dateBorrowed) | Date Returned: \(currentDate())"
                 )
 
                 // Checks if book has already been loaned.
@@ -302,7 +299,7 @@ func returnBook(dbQueue: DatabaseQueue) {
             } else {
                 
                 // Displays error message if there is no active loan with entered book ID.
-                print("No current loan found with book id \(bookID)")
+                print("No current loan found")
                 return
             }
         }
@@ -419,6 +416,15 @@ func addBook(dbQueue: DatabaseQueue) {
                 return
             }
 
+            // Creates variable that is the current year.
+            let year = Calendar.current.component(.year, from: Date())
+
+            // Checks that the year published is valid.
+            if newBook.yearPublished < 0 || newBook.yearPublished > year {
+                print("please enter a valid year published")
+                return
+            }
+
             // Inserts new book into database and tells user.
             try newBook.insert(db)
             print("book succesfully added")
@@ -470,7 +476,7 @@ func deleteBook(dbQueue: DatabaseQueue) {
             } else {
 
                 // Tells user if there is no matching book found to entered book ID.
-                print("No book found with id \(bookID)")
+                print("No book found")
             }
         }
     } catch {
@@ -501,19 +507,19 @@ func editBook(dbQueue: DatabaseQueue) {
                 print("Found book with \(book.summary())")
 
                 // Asks user for new book title, and if user presses nothing it changes nothing from the records.
-                print("enter new book title or press enter to keep \(book.title)")
+                print("enter new book title or press enter to keep \(book.title): ")
                 if let newTitle = readLine(), newTitle != "" {
                     book.title = newTitle
                 }
 
                 // Asks user for new author name, and if user presses nothing it changes nothing from the records.
-                print("enter new book author or press enter to keep \(book.author)")
+                print("enter new book author or press enter to keep \(book.author): ")
                 if let newAuthor = readLine(), newAuthor != "" {
                     book.author = newAuthor
                 }
 
                 // Asks user for new year published that is valid, and if user presses nothing it changes nothing from the records.
-                print("enter new book year published or press enter to keep \(book.yearPublished)")
+                print("enter new book year published or press enter to keep \(book.yearPublished): ")
                 if let newYearPublished = readLine(), newYearPublished != "" {
                     if let newYearPublished = Int(newYearPublished) {
                         book.yearPublished = newYearPublished
@@ -531,7 +537,7 @@ func editBook(dbQueue: DatabaseQueue) {
             } else {
 
                 // Tells user if there is no matching book found to entered book ID.
-                print("No book with id \(bookID)")
+                print("No book found")
             }
         }
     } catch {
@@ -688,19 +694,19 @@ func editBorrower(dbQueue: DatabaseQueue) {
                 print("Found borrower with \(borrower.summary())")
 
                 // Asks user for new borrower name, and if user presses nothing it changes nothing from the records.
-                print("enter new borrower name or press enter to keep \(borrower.name)")
+                print("enter new borrower name or press enter to keep \(borrower.name): ")
                 if let newName = readLine(), newName != "" {
                     borrower.name = newName
                 }
 
                 // Asks user for new borrower email, and if user presses nothing it changes nothing from the records.
-                print("enter new borrower email or press enter to keep \(borrower.email)")
+                print("enter new borrower email or press enter to keep \(borrower.email): ")
                 if let newEmail = readLine(), newEmail != "" {
                     borrower.email = newEmail
                 }
 
                 // Asks user for new borrower phone, and if user presses nothing it changes nothing from the records.
-                print("enter new borrower phone number or press enter to keep \(borrower.phone)")
+                print("enter new borrower phone number or press enter to keep \(borrower.phone): ")
                 if let newPhone = readLine(), newPhone != "" {
                     borrower.phone = newPhone
                 }
@@ -714,7 +720,7 @@ func editBorrower(dbQueue: DatabaseQueue) {
             } else {
 
                 // Tells user if there is no matching book found to entered book ID.
-                print("No borrower with id \(borrowerID)")
+                print("No borrower found")
             }
         }
 
@@ -765,7 +771,7 @@ func deleteBorrower(dbQueue: DatabaseQueue) {
             } else {
 
                 // Tells user if there is no matching borrower found to entered borrower ID.
-                print("No borrower with found id \(borrowerID)")
+                print("No borrower found")
             }
         }
     } catch {
