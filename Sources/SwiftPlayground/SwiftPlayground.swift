@@ -157,7 +157,7 @@ func showMenu() {
         4 - Add new Book
         5 - Delete Book
         6 - Edit Book Records
-        7 - Search Borrower
+        7 - Search Borrower (includes active loans)
         8 - Register new Borrower
         9 - Delete Borrower
         10 - Edit Borrower Records
