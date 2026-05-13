@@ -144,6 +144,35 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     }
 }
 
+func bookTable(book: Books, db: Database) {
+    do {
+            let onLoan =
+                try Loans
+                .filter(
+                    Loans.Columns.bookID == book.id && Loans.Columns.dateReturned == nil
+                )
+                .fetchOne(db)
+            var status: String
+            // Displays books as available if not on loan.
+            if onLoan == nil {
+                status = "Available"
+                // Displays books as unavailable if on loan.
+            } else {
+                status = "On Loan"
+            }
+
+            let id = formatID(id: book.id).padding(toLength: 6, withPad: " ", startingAt: 0)
+            let title = book.title.prefix(24).padding(toLength: 25, withPad: " ", startingAt: 0)
+            let author = book.author.prefix(19).padding(toLength: 20, withPad: " ", startingAt: 0)
+            let year = String(book.yearPublished).padding(
+                toLength: 6, withPad: " ", startingAt: 0)
+            let availability = status.padding(toLength: 20, withPad: " ", startingAt: 0)
+
+            print("\(id)\(title)\(author)\(year)\(availability)")
+    } catch {
+        print("error")
+    }
+}
 /// Displays the menu options.
 ///
 /// This function prints all options the user can choice to do.
@@ -336,12 +365,16 @@ func searchBook(dbQueue: DatabaseQueue) {
             // Tracks if any matching books were found.
             var bookFound = false
 
+            print("------------------------------------------------------------------------")
+            print("ID    TITLE                    AUTHOR              YEAR  AVAILABILITY")
+            print("------------------------------------------------------------------------")
+
             // Loops through each book in database.
             for book in books {
 
                 // If user enters nothing prints all books with their information.
                 if bookSearch == "" {
-                    print(book.summary())
+                    bookTable(book: book, db: db)
                     bookFound = true
                 }
 
@@ -360,11 +393,11 @@ func searchBook(dbQueue: DatabaseQueue) {
 
                     // Displays books as available if not on loan.
                     if onLoan == nil {
-                        print("\(book.summary()) | Status: Available")
+                        bookTable(book: book, db: db)
 
                         // Displays books as unavailable if on loan.
                     } else {
-                        print("\(book.summary()) | Status: Unavailable")
+                        bookTable(book: book, db: db)
                     }
 
                     // Matching book found.
