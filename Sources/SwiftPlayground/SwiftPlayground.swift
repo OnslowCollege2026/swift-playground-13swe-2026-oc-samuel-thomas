@@ -144,35 +144,53 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     }
 }
 
+
+
 func bookTable(book: Books, db: Database) {
     do {
-            let onLoan =
-                try Loans
-                .filter(
-                    Loans.Columns.bookID == book.id && Loans.Columns.dateReturned == nil
-                )
-                .fetchOne(db)
-            var status: String
-            // Displays books as available if not on loan.
-            if onLoan == nil {
-                status = "Available"
-                // Displays books as unavailable if on loan.
-            } else {
-                status = "On Loan"
-            }
+        let onLoan =
+            try Loans
+            .filter(
+                Loans.Columns.bookID == book.id && Loans.Columns.dateReturned == nil
+            )
+            .fetchOne(db)
+        var status: String
+        // Displays books as available if not on loan.
+        if onLoan == nil {
+            status = "Available"
+            // Displays books as unavailable if on loan.
+        } else {
+            status = "On Loan"
+        }
 
-            let id = formatID(id: book.id).padding(toLength: 6, withPad: " ", startingAt: 0)
-            let title = book.title.prefix(24).padding(toLength: 25, withPad: " ", startingAt: 0)
-            let author = book.author.prefix(19).padding(toLength: 20, withPad: " ", startingAt: 0)
-            let year = String(book.yearPublished).padding(
-                toLength: 6, withPad: " ", startingAt: 0)
-            let availability = status.padding(toLength: 20, withPad: " ", startingAt: 0)
+        let id = formatID(id: book.id).padding(toLength: 6, withPad: " ", startingAt: 0)
+        let title = book.title.prefix(24).padding(toLength: 25, withPad: " ", startingAt: 0)
+        let author = book.author.prefix(19).padding(toLength: 20, withPad: " ", startingAt: 0)
+        let year = String(book.yearPublished).padding(
+            toLength: 6, withPad: " ", startingAt: 0)
+        let availability = status.padding(toLength: 20, withPad: " ", startingAt: 0)
 
-            print("\(id)\(title)\(author)\(year)\(availability)")
+        print("\(id)\(title)\(author)\(year)\(availability)")
     } catch {
         print("error")
     }
 }
+/*
+func borrowerTable(borrower: Borrowers, db: Database) {
+    do {
+        let id = formatID(id: book.id).padding(toLength: 6, withPad: " ", startingAt: 0)
+        let title = book.title.prefix(24).padding(toLength: 25, withPad: " ", startingAt: 0)
+        let author = book.author.prefix(19).padding(toLength: 20, withPad: " ", startingAt: 0)
+        let year = String(book.yearPublished).padding(
+            toLength: 6, withPad: " ", startingAt: 0)
+        let availability = status.padding(toLength: 20, withPad: " ", startingAt: 0)
+
+        print("\(id)\(title)\(author)\(year)\(availability)")
+    } catch {
+        print("error")
+    }
+}
+*/
 /// Displays the menu options.
 ///
 /// This function prints all options the user can choice to do.
@@ -180,17 +198,17 @@ func showMenu() {
     print(
         """
         Choose an option:
-        1 - Search Book
-        2 - Loan Book
-        3 - Return Book
-        4 - Add new Book
-        5 - Delete Book
-        6 - Edit Book Records
-        7 - Search Borrower (includes active loans)
-        8 - Register new Borrower
-        9 - Delete Borrower
+        1  - Search Book (includes view all books)
+        2  - Loan Book
+        3  - Return Book
+        4  - Add new Book
+        5  - Delete Book
+        6  - Edit Book Records
+        7  - Search Borrower (includes view all borrowers), (includes active loans) 
+        8  - Register new Borrower
+        9  - Delete Borrower
         10 - Edit Borrower Records
-        0 - Exit
+        0  - Exit
         """)
 }
 
