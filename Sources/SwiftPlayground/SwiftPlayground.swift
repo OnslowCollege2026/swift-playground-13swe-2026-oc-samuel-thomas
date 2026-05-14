@@ -728,7 +728,7 @@ func addBorrower(dbQueue: DatabaseQueue) {
     print("enter borrower email: ")
     let borrowerEmail = readLine() ?? ""
 
-    // Makes sure phone number stays under 101
+    // Makes sure email length is 100 characters or less.
     if borrowerEmail.count > 100 {
         print("Email length too long, must be \(maxEmail) characters or less")
         return
@@ -744,7 +744,7 @@ func addBorrower(dbQueue: DatabaseQueue) {
     print("enter borrower phone: ")
     let borrowerPhone = readLine() ?? ""
 
-    // Makes sure phone number stays under 13 characters.
+    // Makes sure phone number is 12 characters or less.
     if borrowerPhone.count > maxPhoneNumber {
         print("Phone number too long, must be \(maxPhoneNumber) characters or less")
         return
