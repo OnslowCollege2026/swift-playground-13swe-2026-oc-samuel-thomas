@@ -1,7 +1,7 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-// add characterr limits to phone and email max 12 for phone
+// add 12 charactar limit for phone number
 
 import Foundation
 import GRDB
@@ -146,15 +146,27 @@ struct Loans: Identifiable, Codable, FetchableRecord, PersistableRecord {
     }
 }
 
+/// Displays the column names for the book heading.
 func bookHeading() {
-    print("------------------------------------------------------------------------")
+    print("------------------------------------------------------------------------------")
     print("ID    TITLE                    AUTHOR              YEAR  AVAILABILITY")
-    print("------------------------------------------------------------------------")
+    print("------------------------------------------------------------------------------")
 
 }
 
+/// Prints a row of book information on a table.
+///
+/// Checks whether a book is currently on loan.
+/// It then assigns a status: Available or On Loan.
+/// The books details are then formatted into columns to ensure the output is aligned for the table format.
+/// 
+/// - Parameters:
+///     - book: the book records to be displayed.
+///     - db: the database connection.
 func bookTable(book: Books, db: Database) {
     do {
+
+        // Checks if the book is currently being loaned.
         let onLoan =
             try Loans
             .filter(
@@ -162,6 +174,7 @@ func bookTable(book: Books, db: Database) {
             )
             .fetchOne(db)
         var status: String
+
         // Displays books as available if not on loan.
         if onLoan == nil {
             status = "Available"
@@ -170,6 +183,7 @@ func bookTable(book: Books, db: Database) {
             status = "On Loan"
         }
 
+        // Formats values neatly for terminal output.
         let id = formatID(id: book.id).padding(toLength: 6, withPad: " ", startingAt: 0)
         let title = book.title.prefix(24).padding(toLength: 25, withPad: " ", startingAt: 0)
         let author = book.author.prefix(19).padding(toLength: 20, withPad: " ", startingAt: 0)
@@ -177,42 +191,70 @@ func bookTable(book: Books, db: Database) {
             toLength: 6, withPad: " ", startingAt: 0)
         let availability = status.padding(toLength: 20, withPad: " ", startingAt: 0)
 
+        // Prints a signal formatted row in the book table.
         print("\(id)\(title)\(author)\(year)\(availability)")
     } catch {
         print("error")
     }
 }
 
+/// Displays the column names for the borrower heading.
 func borrowerHeading() {
-    print("------------------------------------------------------------------------")
-    print("ID    NAME                PHONE       EMAIL")
-    print("------------------------------------------------------------------------")
+    print("------------------------------------------------------------------------------")
+    print("ID    NAME                PHONE        EMAIL")
+    print("------------------------------------------------------------------------------")
 
 }
 
+/// Prints a row of borrower information on a table.
+///
+/// The borrower details are formatted into columns to ensure the output is aligned for the table format.
+/// 
+/// - Parameters:
+///     - borrower: the borrower records to be displayed.
+///     - db: the database connection.
 func borrowerTable(borrower: Borrowers, db: Database) {
+
+    // Formats values neatly for terminal output.
     let id = formatID(id: borrower.id).padding(toLength: 6, withPad: " ", startingAt: 0)
     let name = borrower.name.prefix(19).padding(toLength: 20, withPad: " ", startingAt: 0)
     let email = borrower.email.prefix(60)
-    let phone = borrower.phone.prefix(10).padding(toLength: 12, withPad: " ", startingAt: 0)
+    let phone = borrower.phone.prefix(12).padding(toLength: 13, withPad: " ", startingAt: 0)
+
+    // Prints a signal formatted row in the borrower table.
     print("\(id)\(name)\(phone)\(email)")
 
 }
 
+/// Displays the column names for the loan heading.
 func loanHeading() {
-    print("------------------------------------------------------------------------")
-    print("ID  BOOKID BOOK  BORROWER DATE BORROWED      ")
-    print("------------------------------------------------------------------------")
+    print("------------------------------------------------------------------------------")
+    print("ID    BOOKID  BOOK                     BORROWER            DATE BORROWED")
+    print("------------------------------------------------------------------------------")
 
 }
 
+/// Prints a row of loan information on a table.
+///
+/// The loan details are formatted into columns to ensure the output is aligned for the table format.
+/// 
+/// - Parameters:
+///     - loan: the loan records to be displayed.
+///     - book: the book records to be displayed.
+///     - borrower: the borrower records to be displayed.
+///     - db: the database connection.
 func loanTable(loan: Loans, borrower: Borrowers, book: Books, db: Database) {
+
+    // Formats values neatly for terminal output.
     let id = formatID(id: loan.id).padding(toLength: 6, withPad: " ", startingAt: 0)
     let bookID = String(loan.bookID).padding(
-        toLength: 6, withPad: " ", startingAt: 0)
-    let bookTitle = book.title.prefix(10).padding(toLength: 12, withPad: " ", startingAt: 0)
-    let borrower = borrower.name.prefix(10).padding(toLength: 12, withPad: " ", startingAt: 0)
-    let dateBorrowed = loan.dateBorrowed.prefix(10).padding(toLength: 12, withPad: " ", startingAt: 0)
+        toLength: 8, withPad: " ", startingAt: 0)
+    let bookTitle = book.title.prefix(24).padding(toLength: 25, withPad: " ", startingAt: 0)
+    let borrower = borrower.name.prefix(19).padding(toLength: 20, withPad: " ", startingAt: 0)
+    let dateBorrowed = loan.dateBorrowed.prefix(10).padding(
+        toLength: 12, withPad: " ", startingAt: 0)
+
+    // Prints a signal formatted row in the borrower table.
     print("\(id)\(bookID)\(bookTitle)\(borrower)\(dateBorrowed)")
 }
 
@@ -412,7 +454,9 @@ func searchBook(dbQueue: DatabaseQueue) {
             // Tracks if any matching books were found.
             var bookFound = false
 
+            // Heading for book table
             bookHeading()
+
             // Loops through each book in database.
             for book in books {
 
@@ -700,12 +744,12 @@ func addBorrower(dbQueue: DatabaseQueue) {
     }
 }
 
-/// Searches for book by name and displays their current loans.
+/// Searches for borrower by name.
 ///
 /// Prompts for a search.
-/// Matches borrower(s) by name.
+/// Matches borrower by name.
+/// If no input given, displays all borrowers in library.
 /// Shows borrower information.
-/// Prints all active loans for borrower(s).
 ///
 /// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func searchBorrower(dbQueue: DatabaseQueue) {
@@ -723,13 +767,14 @@ func searchBorrower(dbQueue: DatabaseQueue) {
             // Tracks if any matching borrowers were found.
             var borrowerFound = false
 
+            // Heading for borrower table
             borrowerHeading()
 
             // Loops through each borrower in database.
             for borrower in borrowers {
 
+                // If user enters nothing all borrowers are printed
                 if borrowerSearch == "" {
-
                     borrowerTable(borrower: borrower, db: db)
                     borrowerFound = true
                 }
@@ -744,11 +789,10 @@ func searchBorrower(dbQueue: DatabaseQueue) {
                     borrowerFound = true
 
                 }
-
-                // Displays message if no borrower is found.
-                if borrowerFound == false {
-                    print("no borrower found")
-                }
+            }
+            // Displays message if no borrower is found.
+            if borrowerFound == false {
+                print("no borrower found")
             }
         }
     } catch {
@@ -756,48 +800,62 @@ func searchBorrower(dbQueue: DatabaseQueue) {
     }
 }
 
+/// Searches for loan by book title or borrwer name.
+///
+/// Prompts for a search.
+/// Matches loan by title or name.
+/// If no input given, displays all loans.
+/// Shows book information.
+///
+/// - Parameter: dbQueue: The GRDB database queue used for access to database.
 func searchLoan(dbQueue: DatabaseQueue) {
 
-    // Ask for user input for borrower name.
+    // Ask for user input for borrower name or book title.
     print("enter book title or borrower name:")
     print("or enter nothing and view all loans:  ")
     let loanSearch = readLine() ?? ""
     do {
         try dbQueue.read { db in
 
-            // Fetches all borrowers from database.
-            let loans = try Loans
-            .filter(Loans.Columns.dateReturned == nil)
-            .fetchAll(db)
+            // Fetches all loans from database that are active.
+            let loans =
+                try Loans
+                .filter(Loans.Columns.dateReturned == nil)
+                .fetchAll(db)
 
-            // Tracks if any matching borrowers were found.
+            // Tracks if any matching loans were found.
             var loanFound = false
 
+            // Heading for loans table.
             loanHeading()
 
             // Loops through each borrower in database.
             for loan in loans {
 
+                // Fetches the related book and borrower for each loan.
                 if let book = try Books.fetchOne(db, key: loan.bookID),
-                    let borrower = try Borrowers.fetchOne(db,key: loan.borrowerID) {
-                if loanSearch == "" {
-                    loanTable(loan: loan, borrower: borrower, book: book, db: db)
-                    loanFound = true
-                }
+                    let borrower = try Borrowers.fetchOne(db, key: loan.borrowerID)
+                {
 
-                // Check if their is a loan that matches the input by user.
-                if book.title.lowercased().contains(loanSearch.lowercased()) 
-                ||
-                borrower.name.lowercased().contains(loanSearch.lowercased()){
+                    // If no search is entered prints out all active loans.
+                    if loanSearch == "" {
+                        loanTable(loan: loan, borrower: borrower, book: book, db: db)
+                        loanFound = true
+                    }
 
-                    loanTable(loan: loan, borrower: borrower, book: book, db: db)
-                    loanFound = true
+                    // Check if their is a loan that matches the input by user.
+                    if book.title.lowercased().contains(loanSearch.lowercased())
+                        || borrower.name.lowercased().contains(loanSearch.lowercased())
+                    {
+                        // Displays matching loans in table.
+                        loanTable(loan: loan, borrower: borrower, book: book, db: db)
+                        loanFound = true
+                    }
                 }
-            }
             }
             // Displays message if no borrower is found.
             if loanFound == false {
-                print("no borrower found")
+                print("no borrower or book found")
             }
         }
     } catch {
