@@ -33,12 +33,6 @@ let bookIDWidth = 8
 let dateBorrowedCutOff = 10
 let dateBorrowedWidth = 12
 
-
-
-
-
-
-
 /// Represents a borrwer in the library.
 ///
 /// A borrower is someone who can loan books from the library.
