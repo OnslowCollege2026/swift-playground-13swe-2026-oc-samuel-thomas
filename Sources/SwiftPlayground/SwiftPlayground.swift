@@ -1,8 +1,6 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-// add 12 charactar limit for phone number
-
 import Foundation
 import GRDB
 
@@ -710,6 +708,11 @@ func addBorrower(dbQueue: DatabaseQueue) {
     // Asks user for borrower email.
     print("enter borrower phone: ")
     let borrowerPhone = readLine() ?? ""
+
+    if borrowerPhone.count > 12 {
+        print("Phone number too long, must be 12 characyars or less")
+        return
+    }
     do {
         try dbQueue.write { db in
 
