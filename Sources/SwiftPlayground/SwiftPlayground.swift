@@ -709,8 +709,9 @@ func addBorrower(dbQueue: DatabaseQueue) {
     print("enter borrower phone: ")
     let borrowerPhone = readLine() ?? ""
 
+    // Makes sure phone number stays under 13 characters.
     if borrowerPhone.count > 12 {
-        print("Phone number too long, must be 12 characyars or less")
+        print("Phone number too long, must be 12 characters or less")
         return
     }
     do {
