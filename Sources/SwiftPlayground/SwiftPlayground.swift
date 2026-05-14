@@ -10,6 +10,35 @@ let fallbackValue: Int = -1
 // Creates variable that is the current year.
 let year = Calendar.current.component(.year, from: Date())
 
+// Max phone number length
+let maxPhoneNumber = 12
+
+// Max email length
+let maxEmail = 100
+
+// Table formatting.
+let idWidth = 6
+let titleCutOff = 23
+let titleWidth = 25
+let authorCutOff = 18
+let authorWidth = 20
+let yearWidth = 6
+let availabilityWidth = 20
+let nameCutOff = 18
+let nameWidth = 20
+let emailWidth = 35
+let phoneCutOff = 12
+let phoneWidth = 14
+let bookIDWidth = 8
+let dateBorrowedCutOff = 10
+let dateBorrowedWidth = 12
+
+
+
+
+
+
+
 /// Represents a borrwer in the library.
 ///
 /// A borrower is someone who can loan books from the library.
@@ -182,12 +211,12 @@ func bookTable(book: Books, db: Database) {
         }
 
         // Formats values neatly for terminal output.
-        let id = formatID(id: book.id).padding(toLength: 6, withPad: " ", startingAt: 0)
-        let title = book.title.prefix(24).padding(toLength: 25, withPad: " ", startingAt: 0)
-        let author = book.author.prefix(19).padding(toLength: 20, withPad: " ", startingAt: 0)
+        let id = formatID(id: book.id).padding(toLength: idWidth, withPad: " ", startingAt: 0)
+        let title = book.title.prefix(titleCutOff).padding(toLength: titleWidth, withPad: " ", startingAt: 0)
+        let author = book.author.prefix(authorCutOff).padding(toLength: authorWidth, withPad: " ", startingAt: 0)
         let year = String(book.yearPublished).padding(
-            toLength: 6, withPad: " ", startingAt: 0)
-        let availability = status.padding(toLength: 20, withPad: " ", startingAt: 0)
+            toLength: yearWidth, withPad: " ", startingAt: 0)
+        let availability = status.padding(toLength: availabilityWidth, withPad: " ", startingAt: 0)
 
         // Prints a signal formatted row in the book table.
         print("\(id)\(title)\(author)\(year)\(availability)")
@@ -199,7 +228,7 @@ func bookTable(book: Books, db: Database) {
 /// Displays the column names for the borrower heading.
 func borrowerHeading() {
     print("------------------------------------------------------------------------------")
-    print("ID    NAME                PHONE        EMAIL")
+    print("ID    NAME                PHONE         EMAIL")
     print("------------------------------------------------------------------------------")
 
 }
@@ -214,10 +243,10 @@ func borrowerHeading() {
 func borrowerTable(borrower: Borrowers, db: Database) {
 
     // Formats values neatly for terminal output.
-    let id = formatID(id: borrower.id).padding(toLength: 6, withPad: " ", startingAt: 0)
-    let name = borrower.name.prefix(19).padding(toLength: 20, withPad: " ", startingAt: 0)
-    let email = borrower.email.prefix(60)
-    let phone = borrower.phone.prefix(12).padding(toLength: 13, withPad: " ", startingAt: 0)
+    let id = formatID(id: borrower.id).padding(toLength: idWidth, withPad: " ", startingAt: 0)
+    let name = borrower.name.prefix(nameCutOff).padding(toLength: nameWidth, withPad: " ", startingAt: 0)
+    let email = borrower.email
+    let phone = borrower.phone.prefix(phoneCutOff).padding(toLength: phoneWidth, withPad: " ", startingAt: 0)
 
     // Prints a signal formatted row in the borrower table.
     print("\(id)\(name)\(phone)\(email)")
@@ -244,13 +273,13 @@ func loanHeading() {
 func loanTable(loan: Loans, borrower: Borrowers, book: Books, db: Database) {
 
     // Formats values neatly for terminal output.
-    let id = formatID(id: loan.id).padding(toLength: 6, withPad: " ", startingAt: 0)
+    let id = formatID(id: loan.id).padding(toLength: idWidth, withPad: " ", startingAt: 0)
     let bookID = String(loan.bookID).padding(
-        toLength: 8, withPad: " ", startingAt: 0)
-    let bookTitle = book.title.prefix(24).padding(toLength: 25, withPad: " ", startingAt: 0)
-    let borrower = borrower.name.prefix(19).padding(toLength: 20, withPad: " ", startingAt: 0)
-    let dateBorrowed = loan.dateBorrowed.prefix(10).padding(
-        toLength: 12, withPad: " ", startingAt: 0)
+        toLength: bookIDWidth, withPad: " ", startingAt: 0)
+    let bookTitle = book.title.prefix(titleCutOff).padding(toLength: titleWidth, withPad: " ", startingAt: 0)
+    let borrower = borrower.name.prefix(nameCutOff).padding(toLength: nameWidth, withPad: " ", startingAt: 0)
+    let dateBorrowed = loan.dateBorrowed.prefix(dateBorrowedCutOff).padding(
+        toLength: dateBorrowedWidth, withPad: " ", startingAt: 0)
 
     // Prints a signal formatted row in the borrower table.
     print("\(id)\(bookID)\(bookTitle)\(borrower)\(dateBorrowed)")
@@ -705,13 +734,25 @@ func addBorrower(dbQueue: DatabaseQueue) {
     print("enter borrower email: ")
     let borrowerEmail = readLine() ?? ""
 
+    // Makes sure phone number stays under 101
+    if borrowerEmail.count > 100 {
+        print("Email length too long, must be \(maxEmail) characters or less")
+        return
+    }
+
+    // makes sure email is valid because it has @ sign.
+    if !borrowerEmail.contains("@") {
+        print("invalid email, no '@' sign")
+        return
+    }
+
     // Asks user for borrower email.
     print("enter borrower phone: ")
     let borrowerPhone = readLine() ?? ""
 
     // Makes sure phone number stays under 13 characters.
-    if borrowerPhone.count > 12 {
-        print("Phone number too long, must be 12 characters or less")
+    if borrowerPhone.count > maxPhoneNumber {
+        print("Phone number too long, must be \(maxPhoneNumber) characters or less")
         return
     }
     do {
